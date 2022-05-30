@@ -1,5 +1,7 @@
+use libc::c_void;
+
 #[no_mangle]
-pub extern "C" fn free() {}
+pub extern "C" fn free(_ptr: *mut c_void) {}
 
 #[cfg(test)]
 mod tests {
@@ -7,7 +9,7 @@ mod tests {
 
     #[test]
     fn test_free() {
-        free();
+        free(0 as *mut c_void);
         assert!(true);
     }
 }
