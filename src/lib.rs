@@ -1,12 +1,14 @@
 #[no_mangle]
-pub extern "C" fn free() -> () {
+pub extern "C" fn free() {
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn test_free() {
+        free();
+        assert!(true);
     }
 }
