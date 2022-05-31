@@ -9,9 +9,10 @@ use std::{
     ffi::{CStr, CString},
     fs, panic,
     process::exit,
+    sync::atomic::{AtomicBool, Ordering},
 };
 
-static mut MAIN_STARTED: bool = false;
+static MAIN_STARTED: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
     static FREE_RECURSION_GUARD: Cell<bool> = Cell::new(true);
@@ -62,7 +63,7 @@ pub extern "C" fn __libc_start_main() {
         );
         dlclose(handle);
 
-        MAIN_STARTED = true;
+        MAIN_STARTED.store(true, Ordering::SeqCst);
 
         asm!(
             "leave",
@@ -90,7 +91,7 @@ pub extern "C" fn free(ptr: *mut c_void) {
 
     FREE_RECURSION_GUARD.set(false);
 
-    if unsafe { !MAIN_STARTED } {
+    if !MAIN_STARTED.load(Ordering::SeqCst) {
         unsafe {
             let handle = dlopen(
                 CString::new("/lib/libc.so.6").unwrap().into_raw(),
