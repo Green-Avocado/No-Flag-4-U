@@ -1,8 +1,11 @@
 #![feature(iter_advance_by)]
 
-use libc::c_void;
-use std::arch::asm;
-use std::fs;
+use libc::{c_void, dlopen, dlsym, dlclose, RTLD_LOCAL, RTLD_LAZY};
+use std::{arch::asm, fs, ffi::CString};
+
+static mut REAL_FREE: Option<*mut c_void> = None;
+static mut MAIN_STARTED: bool = false;
+static mut FREE_RECURSION_GUARD: bool = true;
 
 struct PageInfo {
     read: bool,
@@ -12,7 +15,61 @@ struct PageInfo {
 }
 
 #[no_mangle]
+pub extern "C" fn __libc_start_main(main: *mut c_void) {
+    let rdi: usize;
+    let rsi: usize;
+    let rdx: usize;
+    let rcx: usize;
+    let r8: usize;
+    let r9: usize;
+
+    unsafe {
+        asm!(
+            "nop",
+            out("rdi") rdi,
+            out("rsi") rsi,
+            out("rdx") rdx,
+            out("rcx") rcx,
+            out("r8") r8,
+            out("r9") r9,
+        );
+
+        if REAL_FREE.is_none() {
+            let handle = dlopen(CString::new("/lib/libc.so.6").unwrap().into_raw(), RTLD_LAZY | RTLD_LOCAL);
+            REAL_FREE = Some(dlsym(handle, CString::new("__libc_start_main").unwrap().into_raw()));
+            dlclose(handle);
+        }
+
+        asm!(
+            "leave",
+            "jmp rax",
+            in("rax") REAL_FREE.unwrap(),
+            in("rdi") rdi,
+            in("rsi") rsi,
+            in("rdx") rdx,
+            in("rcx") rcx,
+            in("r8") r8,
+            in("r9") r9,
+        );
+
+        MAIN_STARTED = true;
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn free(ptr: *mut c_void) {
+    if unsafe{!MAIN_STARTED} {
+        return;
+    }
+
+    if unsafe{!FREE_RECURSION_GUARD} {
+        return;
+    }
+
+    unsafe {
+        FREE_RECURSION_GUARD = false;
+    }
+
     let page_info = get_ptr_info(ptr);
 
     if !(page_info.read && page_info.write && !page_info.execute) {
@@ -22,9 +79,17 @@ pub extern "C" fn free(ptr: *mut c_void) {
     if page_info.file == Some("[stack]".to_string()) {
         panic!("freeing in stack");
     }
+
+    unsafe {
+        FREE_RECURSION_GUARD = true;
+    }
 }
 
-fn get_ptr_info(ptr: *mut c_void) -> PageInfo {
+#[no_mangle]
+pub extern "C" fn printf() {
+}
+
+fn get_ptr_info(ptr: *const c_void) -> PageInfo {
     const PARSE_ERR: &str = "failed to parse maps";
 
     let contents = fs::read_to_string("/proc/self/maps").expect("could not read /proc/self/maps");
@@ -37,8 +102,8 @@ fn get_ptr_info(ptr: *mut c_void) -> PageInfo {
             .split_once('-')
             .expect(PARSE_ERR);
 
-        let lower_bound = bounds.0.parse::<usize>().expect(PARSE_ERR);
-        let upper_bound = bounds.1.parse::<usize>().expect(PARSE_ERR);
+        let lower_bound = usize::from_str_radix(bounds.0, 16).expect(PARSE_ERR);
+        let upper_bound = usize::from_str_radix(bounds.1, 16).expect(PARSE_ERR);
 
         if lower_bound <= ptr as usize && ptr as usize <= upper_bound {
             let mut chars = columns.next().expect(PARSE_ERR).chars();
@@ -55,8 +120,7 @@ fn get_ptr_info(ptr: *mut c_void) -> PageInfo {
                 asm!("mov {}, rsp", out(reg) rsp);
             }
 
-            if file == Some("[stack]".to_string()) && rsp < ptr as usize
-            {
+            if file == Some("[stack]".to_string()) && rsp < ptr as usize {
                 panic!("dangling stack pointer");
             }
 
@@ -77,14 +141,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_free() {
-        free(0 as *mut c_void);
-        assert!(true);
+    #[should_panic]
+    fn test_get_ptr_info_zero() {
+        get_ptr_info(0 as *const c_void);
     }
 
     #[test]
-    fn test_get_ptr_info() {
-        get_ptr_info(0 as *mut c_void);
-        assert!(true);
+    fn test_get_ptr_info_const() {
+        const TEST_VALUE: u64 = 0x1337;
+        let page_info = get_ptr_info(&TEST_VALUE as *const _ as *const c_void);
+        assert_eq!(page_info.read, true);
+        assert_eq!(page_info.write, false);
+        assert_eq!(page_info.execute, false);
     }
 }
