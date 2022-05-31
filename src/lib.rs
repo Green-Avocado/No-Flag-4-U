@@ -155,7 +155,7 @@ pub extern "C" fn printf(format: *const c_char) {
             CString::new("/lib/libc.so.6").unwrap().into_raw(),
             RTLD_LAZY | RTLD_LOCAL,
         );
-        let real_sym = dlsym(handle, CString::new("free").unwrap().into_raw());
+        let real_sym = dlsym(handle, CString::new("printf").unwrap().into_raw());
         dlclose(handle);
 
         asm!(
