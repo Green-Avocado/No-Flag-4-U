@@ -1,0 +1,5 @@
+[build]
+rustflags = ["-C", "force-frame-pointers=yes"]
+
+[env]
+RUST_TEST_THREADS = "1"

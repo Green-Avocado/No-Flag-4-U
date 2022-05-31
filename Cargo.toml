@@ -11,6 +11,7 @@ libc = "0.2"
 [lib]
 crate-type = ["cdylib", "lib"]
 
+
 [profile.release]
 strip = true
 opt-level = "z"

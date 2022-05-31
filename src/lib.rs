@@ -1,8 +1,9 @@
 #![feature(iter_advance_by)]
 
-use libc::{c_void, dlopen, dlsym, dlclose, RTLD_LOCAL, RTLD_LAZY};
-use std::{arch::asm, fs, ffi::CString};
+use libc::{c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
+use std::{arch::asm, ffi::CString, fs};
 
+static mut REAL_LIBC_START_MAIN: Option<*mut c_void> = None;
 static mut REAL_FREE: Option<*mut c_void> = None;
 static mut MAIN_STARTED: bool = false;
 static mut FREE_RECURSION_GUARD: bool = true;
@@ -15,7 +16,7 @@ struct PageInfo {
 }
 
 #[no_mangle]
-pub extern "C" fn __libc_start_main(main: *mut c_void) {
+pub extern "C" fn __libc_start_main() {
     let rdi: usize;
     let rsi: usize;
     let rdx: usize;
@@ -34,16 +35,24 @@ pub extern "C" fn __libc_start_main(main: *mut c_void) {
             out("r9") r9,
         );
 
-        if REAL_FREE.is_none() {
-            let handle = dlopen(CString::new("/lib/libc.so.6").unwrap().into_raw(), RTLD_LAZY | RTLD_LOCAL);
-            REAL_FREE = Some(dlsym(handle, CString::new("__libc_start_main").unwrap().into_raw()));
+        if REAL_LIBC_START_MAIN.is_none() {
+            let handle = dlopen(
+                CString::new("/lib/libc.so.6").unwrap().into_raw(),
+                RTLD_LAZY | RTLD_LOCAL,
+            );
+            REAL_LIBC_START_MAIN = Some(dlsym(
+                handle,
+                CString::new("__libc_start_main").unwrap().into_raw(),
+            ));
             dlclose(handle);
         }
+
+        MAIN_STARTED = true;
 
         asm!(
             "leave",
             "jmp rax",
-            in("rax") REAL_FREE.unwrap(),
+            in("rax") REAL_LIBC_START_MAIN.unwrap(),
             in("rdi") rdi,
             in("rsi") rsi,
             in("rdx") rdx,
@@ -51,33 +60,49 @@ pub extern "C" fn __libc_start_main(main: *mut c_void) {
             in("r8") r8,
             in("r9") r9,
         );
-
-        MAIN_STARTED = true;
     }
 }
 
 #[no_mangle]
 pub extern "C" fn free(ptr: *mut c_void) {
-    if unsafe{!MAIN_STARTED} {
-        return;
-    }
-
-    if unsafe{!FREE_RECURSION_GUARD} {
-        return;
-    }
-
     unsafe {
+        if !FREE_RECURSION_GUARD {
+            return;
+        }
+
         FREE_RECURSION_GUARD = false;
     }
 
-    let page_info = get_ptr_info(ptr);
+    if unsafe{ !MAIN_STARTED } {
+        unsafe {
+            if REAL_FREE.is_none() {
+                let handle = dlopen(
+                    CString::new("/lib/libc.so.6").unwrap().into_raw(),
+                    RTLD_LAZY | RTLD_LOCAL,
+                );
+                REAL_FREE = Some(dlsym(
+                    handle,
+                    CString::new("free").unwrap().into_raw(),
+                ));
+                dlclose(handle);
+            }
 
-    if !(page_info.read && page_info.write && !page_info.execute) {
-        panic!("freeing invalid permissions");
-    }
+            asm!(
+                "call rax",
+                in("rax") REAL_FREE.unwrap(),
+                in("rdi") ptr,
+            );
+        }
+    } else {
+        let page_info = get_ptr_info(ptr);
 
-    if page_info.file == Some("[stack]".to_string()) {
-        panic!("freeing in stack");
+        if !(page_info.read && page_info.write && !page_info.execute) {
+            panic!("freeing invalid permissions");
+        }
+
+        if page_info.file == Some("[stack]".to_string()) {
+            panic!("freeing in stack");
+        }
     }
 
     unsafe {
@@ -86,8 +111,7 @@ pub extern "C" fn free(ptr: *mut c_void) {
 }
 
 #[no_mangle]
-pub extern "C" fn printf() {
-}
+pub extern "C" fn printf() {}
 
 fn get_ptr_info(ptr: *const c_void) -> PageInfo {
     const PARSE_ERR: &str = "failed to parse maps";
