@@ -11,6 +11,7 @@ use std::{
     process::exit,
     sync::atomic::{AtomicBool, Ordering},
 };
+use zeroize::Zeroize;
 
 static MAIN_STARTED: AtomicBool = AtomicBool::new(false);
 
@@ -188,8 +189,10 @@ pub extern "C" fn printf(format: *const c_char) {
 
 fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     const PARSE_ERR: &str = "failed to parse maps";
+    let mut ret = None;
 
-    let contents = fs::read_to_string("/proc/self/maps").expect("could not read /proc/self/maps");
+    let mut contents =
+        fs::read_to_string("/proc/self/maps").expect("could not read /proc/self/maps");
 
     for row in contents.lines() {
         let mut columns = row.split_whitespace();
@@ -221,7 +224,7 @@ fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
                 panic!("dangling stack pointer");
             }
 
-            return Some(PageInfo {
+            ret = Some(PageInfo {
                 read,
                 write,
                 execute,
@@ -230,7 +233,9 @@ fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
         }
     }
 
-    None
+    contents.zeroize();
+
+    ret
 }
 
 #[cfg(test)]
