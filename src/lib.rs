@@ -1,11 +1,9 @@
 #![feature(iter_advance_by)]
 #![feature(panic_always_abort)]
 
-use libc::{c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
-use std::{arch::asm, ffi::CString, fs, panic};
+use libc::{c_char, c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
+use std::{arch::asm, ffi::CString, fs, panic, process::exit};
 
-static mut REAL_LIBC_START_MAIN: Option<*mut c_void> = None;
-static mut REAL_FREE: Option<*mut c_void> = None;
 static mut MAIN_STARTED: bool = false;
 static mut FREE_RECURSION_GUARD: bool = true;
 
@@ -38,28 +36,28 @@ pub extern "C" fn __libc_start_main() {
     }
 
     if !cfg!(debug_assertions) {
-        panic::always_abort();
+        panic::set_hook(Box::new(|_| {
+            exit(-1);
+        }));
     }
 
     unsafe {
-        if REAL_LIBC_START_MAIN.is_none() {
-            let handle = dlopen(
-                CString::new("/lib/libc.so.6").unwrap().into_raw(),
-                RTLD_LAZY | RTLD_LOCAL,
-            );
-            REAL_LIBC_START_MAIN = Some(dlsym(
-                handle,
-                CString::new("__libc_start_main").unwrap().into_raw(),
-            ));
-            dlclose(handle);
-        }
+        let handle = dlopen(
+            CString::new("/lib/libc.so.6").unwrap().into_raw(),
+            RTLD_LAZY | RTLD_LOCAL,
+        );
+        let real_sym = dlsym(
+            handle,
+            CString::new("__libc_start_main").unwrap().into_raw(),
+        );
+        dlclose(handle);
 
         MAIN_STARTED = true;
 
         asm!(
             "leave",
             "jmp rax",
-            in("rax") REAL_LIBC_START_MAIN.unwrap(),
+            in("rax") real_sym,
             in("rdi") rdi,
             in("rsi") rsi,
             in("rdx") rdx,
@@ -86,18 +84,16 @@ pub extern "C" fn free(ptr: *mut c_void) {
 
     if unsafe { !MAIN_STARTED } {
         unsafe {
-            if REAL_FREE.is_none() {
-                let handle = dlopen(
-                    CString::new("/lib/libc.so.6").unwrap().into_raw(),
-                    RTLD_LAZY | RTLD_LOCAL,
-                );
-                REAL_FREE = Some(dlsym(handle, CString::new("free").unwrap().into_raw()));
-                dlclose(handle);
-            }
+            let handle = dlopen(
+                CString::new("/lib/libc.so.6").unwrap().into_raw(),
+                RTLD_LAZY | RTLD_LOCAL,
+            );
+            let real_sym = dlsym(handle, CString::new("free").unwrap().into_raw());
+            dlclose(handle);
 
             asm!(
                 "call rax",
-                in("rax") REAL_FREE.unwrap(),
+                in("rax") real_sym,
                 in("rdi") ptr,
             );
         }
@@ -119,7 +115,62 @@ pub extern "C" fn free(ptr: *mut c_void) {
 }
 
 #[no_mangle]
-pub extern "C" fn printf() {}
+pub extern "C" fn printf(format: *const c_char) {
+    let rdi: usize;
+    let rsi: usize;
+    let rdx: usize;
+    let rcx: usize;
+    let r8: usize;
+    let r9: usize;
+
+    unsafe {
+        asm!(
+            "nop",
+            out("rdi") rdi,
+            out("rsi") rsi,
+            out("rdx") rdx,
+            out("rcx") rcx,
+            out("r8") r8,
+            out("r9") r9,
+        );
+    }
+
+    let page_info =
+        get_ptr_info(format as *const _ as *const c_void).expect("invalid format string pointer");
+
+    if page_info.file == Some("[stack]".to_string()) {
+        panic!("format string in stack");
+    }
+
+    if page_info.file == Some("[heap]".to_string()) {
+        panic!("format string in heap");
+    }
+
+    if !page_info.read || page_info.write || page_info.execute {
+        panic!("invalid permissions for format string");
+    }
+
+    unsafe {
+        let handle = dlopen(
+            CString::new("/lib/libc.so.6").unwrap().into_raw(),
+            RTLD_LAZY | RTLD_LOCAL,
+        );
+        let real_sym = dlsym(handle, CString::new("free").unwrap().into_raw());
+        dlclose(handle);
+
+        asm!(
+            "leave",
+            "jmp rax",
+            in("rax") real_sym,
+            in("rdi") rdi,
+            in("rsi") rsi,
+            in("rdx") rdx,
+            in("rcx") rcx,
+            in("r8") r8,
+            in("r9") r9,
+        );
+    }
+}
 
 fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     const PARSE_ERR: &str = "failed to parse maps";
