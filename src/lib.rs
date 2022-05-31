@@ -3,7 +3,13 @@
 #![feature(local_key_cell_methods)]
 
 use libc::{c_char, c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
-use std::{arch::asm, cell::Cell, ffi::CString, fs, panic, process::exit};
+use std::{
+    arch::asm,
+    cell::Cell,
+    ffi::{CStr, CString},
+    fs, panic,
+    process::exit,
+};
 
 static mut MAIN_STARTED: bool = false;
 
@@ -148,6 +154,15 @@ pub extern "C" fn printf(format: *const c_char) {
 
     if !page_info.read || page_info.write || page_info.execute {
         panic!("invalid permissions for format string");
+    }
+
+    if cfg!(disallow_printf_n) {
+        let s = unsafe { CStr::from_ptr(format) }
+            .to_str()
+            .expect("invalid format string");
+        if s.contains("%n") {
+            panic!("dangerous format string prohibited");
+        }
     }
 
     unsafe {
