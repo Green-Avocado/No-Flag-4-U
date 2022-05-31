@@ -13,7 +13,7 @@ use std::{
 };
 use zeroize::Zeroize;
 
-const LIBC_PATH: &str = "/lib/libc.so.6";
+const LIBC_PATH: &str = "/usr/lib/libc.so.6";
 static MAIN_STARTED: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
