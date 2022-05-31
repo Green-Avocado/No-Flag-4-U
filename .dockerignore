@@ -1,0 +1,6 @@
+target/
+build.sh
+Dockerfile
+LICENSE
+README.md
+.gitignore

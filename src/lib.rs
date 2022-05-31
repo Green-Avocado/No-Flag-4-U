@@ -15,8 +15,12 @@ struct PageInfo {
 pub extern "C" fn free(ptr: *mut c_void) {
     let page_info = get_ptr_info(ptr);
 
-    if page_info.file != Some("[heap]".to_string()) {
-        panic!("freeing outside of heap");
+    if !(page_info.read && page_info.write && !page_info.execute) {
+        panic!("freeing invalid permissions");
+    }
+
+    if page_info.file == Some("[stack]".to_string()) {
+        panic!("freeing in stack");
     }
 }
 
