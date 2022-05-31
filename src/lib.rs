@@ -65,6 +65,10 @@ pub extern "C" fn __libc_start_main() {
 
 #[no_mangle]
 pub extern "C" fn free(ptr: *mut c_void) {
+    if ptr as usize == 0 {
+        return;
+    }
+
     unsafe {
         if !FREE_RECURSION_GUARD {
             return;
@@ -94,7 +98,7 @@ pub extern "C" fn free(ptr: *mut c_void) {
             );
         }
     } else {
-        let page_info = get_ptr_info(ptr);
+        let page_info = get_ptr_info(ptr).expect("freeing invalid pointer");
 
         if !(page_info.read && page_info.write && !page_info.execute) {
             panic!("freeing invalid permissions");
@@ -113,7 +117,7 @@ pub extern "C" fn free(ptr: *mut c_void) {
 #[no_mangle]
 pub extern "C" fn printf() {}
 
-fn get_ptr_info(ptr: *const c_void) -> PageInfo {
+fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     const PARSE_ERR: &str = "failed to parse maps";
 
     let contents = fs::read_to_string("/proc/self/maps").expect("could not read /proc/self/maps");
@@ -148,16 +152,16 @@ fn get_ptr_info(ptr: *const c_void) -> PageInfo {
                 panic!("dangling stack pointer");
             }
 
-            return PageInfo {
+            return Some(PageInfo {
                 read,
                 write,
                 execute,
                 file,
-            };
+            });
         }
     }
 
-    panic!("{}", PARSE_ERR);
+    None
 }
 
 #[cfg(test)]
@@ -165,15 +169,14 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic]
-    fn test_get_ptr_info_zero() {
-        get_ptr_info(0 as *const c_void);
+    fn test_get_ptr_info_invalid() {
+        assert!(get_ptr_info(1 as *const c_void).is_none());
     }
 
     #[test]
     fn test_get_ptr_info_const() {
         const TEST_VALUE: u64 = 0x1337;
-        let page_info = get_ptr_info(&TEST_VALUE as *const _ as *const c_void);
+        let page_info = get_ptr_info(&TEST_VALUE as *const _ as *const c_void).unwrap();
         assert_eq!(page_info.read, true);
         assert_eq!(page_info.write, false);
         assert_eq!(page_info.execute, false);
