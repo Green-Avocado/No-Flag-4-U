@@ -1,10 +1,15 @@
+#![feature(iter_advance_by)]
+
 use libc::c_void;
 use std::fs;
+use std::arch::asm;
 
 struct PageInfo {
     read: bool,
     write: bool,
     execute: bool,
+    stack: bool,
+    heap: bool,
 }
 
 #[no_mangle]
@@ -31,28 +36,31 @@ fn get_ptr_info(ptr: *mut c_void) -> PageInfo {
         if lower_bound <= ptr as usize && ptr as usize <= upper_bound {
             let mut chars = columns.next().expect(PARSE_ERR).chars();
 
-            let read = if 'r' == chars.next().expect(PARSE_ERR) {
-                true
-            } else {
-                false
-            };
+            let read = 'r' == chars.next().expect(PARSE_ERR);
+            let write = 'w' == chars.next().expect(PARSE_ERR);
+            let execute = 'x' == chars.next().expect(PARSE_ERR);
 
-            let write = if 'w' == chars.next().expect(PARSE_ERR) {
-                true
-            } else {
-                false
-            };
+            columns.advance_by(3).expect(PARSE_ERR);
+            let file = columns.next().unwrap_or("");
 
-            let execute = if 'x' == chars.next().expect(PARSE_ERR) {
-                true
-            } else {
-                false
-            };
+            let stack = file == "[stack]";
+            let heap = file == "[heap]";
+
+            let rsp: usize;
+            unsafe {
+                asm!("mov {}, rsp", out(reg) rsp);
+            }
+
+            if stack && rsp < ptr as usize {
+                panic!("dangling stack pointer");
+            }
 
             return PageInfo {
                 read,
                 write,
                 execute,
+                stack,
+                heap,
             };
         }
     }
