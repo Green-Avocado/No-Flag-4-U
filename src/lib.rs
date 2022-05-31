@@ -1,11 +1,15 @@
 #![feature(iter_advance_by)]
 #![feature(panic_always_abort)]
+#![feature(local_key_cell_methods)]
 
 use libc::{c_char, c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
-use std::{arch::asm, ffi::CString, fs, panic, process::exit};
+use std::{arch::asm, cell::Cell, ffi::CString, fs, panic, process::exit};
 
 static mut MAIN_STARTED: bool = false;
-static mut FREE_RECURSION_GUARD: bool = true;
+
+thread_local! {
+    static FREE_RECURSION_GUARD: Cell<bool> = Cell::new(true);
+}
 
 struct PageInfo {
     read: bool,
@@ -74,13 +78,11 @@ pub extern "C" fn free(ptr: *mut c_void) {
         return;
     }
 
-    unsafe {
-        if !FREE_RECURSION_GUARD {
-            return;
-        }
-
-        FREE_RECURSION_GUARD = false;
+    if !FREE_RECURSION_GUARD.get() {
+        return;
     }
+
+    FREE_RECURSION_GUARD.set(false);
 
     if unsafe { !MAIN_STARTED } {
         unsafe {
@@ -109,9 +111,7 @@ pub extern "C" fn free(ptr: *mut c_void) {
         }
     }
 
-    unsafe {
-        FREE_RECURSION_GUARD = true;
-    }
+    FREE_RECURSION_GUARD.set(true);
 }
 
 #[no_mangle]
