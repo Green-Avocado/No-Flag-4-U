@@ -1,20 +1,23 @@
 #![feature(iter_advance_by)]
 
 use libc::c_void;
-use std::fs;
 use std::arch::asm;
+use std::fs;
 
 struct PageInfo {
     read: bool,
     write: bool,
     execute: bool,
-    stack: bool,
-    heap: bool,
+    file: Option<String>,
 }
 
 #[no_mangle]
 pub extern "C" fn free(ptr: *mut c_void) {
-    get_ptr_info(ptr);
+    let page_info = get_ptr_info(ptr);
+
+    if page_info.file != Some("[heap]".to_string()) {
+        panic!("freeing outside of heap");
+    }
 }
 
 fn get_ptr_info(ptr: *mut c_void) -> PageInfo {
@@ -41,17 +44,15 @@ fn get_ptr_info(ptr: *mut c_void) -> PageInfo {
             let execute = 'x' == chars.next().expect(PARSE_ERR);
 
             columns.advance_by(3).expect(PARSE_ERR);
-            let file = columns.next().unwrap_or("");
-
-            let stack = file == "[stack]";
-            let heap = file == "[heap]";
+            let file = columns.next().map(str::to_string);
 
             let rsp: usize;
             unsafe {
                 asm!("mov {}, rsp", out(reg) rsp);
             }
 
-            if stack && rsp < ptr as usize {
+            if file == Some("[stack]".to_string()) && rsp < ptr as usize
+            {
                 panic!("dangling stack pointer");
             }
 
@@ -59,8 +60,7 @@ fn get_ptr_info(ptr: *mut c_void) -> PageInfo {
                 read,
                 write,
                 execute,
-                stack,
-                heap,
+                file,
             };
         }
     }
