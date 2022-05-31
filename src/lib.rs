@@ -13,6 +13,7 @@ use std::{
 };
 use zeroize::Zeroize;
 
+const LIBC_PATH: &str = "/lib/libc.so.6";
 static MAIN_STARTED: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
@@ -55,7 +56,7 @@ pub extern "C" fn __libc_start_main() {
 
     unsafe {
         let handle = dlopen(
-            CString::new("/lib/libc.so.6").unwrap().into_raw(),
+            CString::new(LIBC_PATH).unwrap().into_raw(),
             RTLD_LAZY | RTLD_LOCAL,
         );
         let real_sym = dlsym(
@@ -95,7 +96,7 @@ pub extern "C" fn free(ptr: *mut c_void) {
     if !MAIN_STARTED.load(Ordering::SeqCst) {
         unsafe {
             let handle = dlopen(
-                CString::new("/lib/libc.so.6").unwrap().into_raw(),
+                CString::new(LIBC_PATH).unwrap().into_raw(),
                 RTLD_LAZY | RTLD_LOCAL,
             );
             let real_sym = dlsym(handle, CString::new("free").unwrap().into_raw());
@@ -167,7 +168,7 @@ pub extern "C" fn printf(format: *const c_char) {
 
     unsafe {
         let handle = dlopen(
-            CString::new("/lib/libc.so.6").unwrap().into_raw(),
+            CString::new(LIBC_PATH).unwrap().into_raw(),
             RTLD_LAZY | RTLD_LOCAL,
         );
         let real_sym = dlsym(handle, CString::new("printf").unwrap().into_raw());
