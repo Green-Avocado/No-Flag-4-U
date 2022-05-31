@@ -123,8 +123,8 @@ pub extern "C" fn free(ptr: *mut c_void) {
 
 #[no_mangle]
 pub extern "C" fn printf(format: *const c_char) {
-    let rdi: usize;
-    let rsi: usize;
+    let mut rdi: usize;
+    let mut rsi: usize;
     let rdx: usize;
     let rcx: usize;
     let r8: usize;
@@ -145,20 +145,18 @@ pub extern "C" fn printf(format: *const c_char) {
     let page_info =
         get_ptr_info(format as *const _ as *const c_void).expect("invalid format string pointer");
 
-    if page_info.file == Some("[stack]".to_string()) {
-        panic!("format string in stack");
+    if page_info.file == Some("[stack]".to_string())
+        || page_info.file == Some("[heap]".to_string())
+        || !page_info.read
+        || page_info.write
+        || page_info.execute
+    {
+        rsi = rdi;
+        rdi = CString::new("%s").unwrap().into_raw() as usize;
     }
 
-    if page_info.file == Some("[heap]".to_string()) {
-        panic!("format string in heap");
-    }
-
-    if !page_info.read || page_info.write || page_info.execute {
-        panic!("invalid permissions for format string");
-    }
-
-    if cfg!(disallow_printf_n) {
-        let s = unsafe { CStr::from_ptr(format) }
+    if cfg!(disallow_dangerous_printf) {
+        let s = unsafe { CStr::from_ptr(rdi as *const c_char) }
             .to_str()
             .expect("invalid format string");
         if s.contains("%n") {
@@ -219,7 +217,7 @@ fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
                 asm!("mov {}, rsp", out(reg) rsp);
             }
 
-            if file == Some("[stack]".to_string()) && rsp < ptr as usize {
+            if file == Some("[stack]".to_string()) && rsp > ptr as usize {
                 panic!("dangling stack pointer");
             }
 
