@@ -1,7 +1,8 @@
 #![feature(iter_advance_by)]
+#![feature(panic_always_abort)]
 
 use libc::{c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
-use std::{arch::asm, ffi::CString, fs};
+use std::{arch::asm, ffi::CString, fs, panic};
 
 static mut REAL_LIBC_START_MAIN: Option<*mut c_void> = None;
 static mut REAL_FREE: Option<*mut c_void> = None;
@@ -34,7 +35,13 @@ pub extern "C" fn __libc_start_main() {
             out("r8") r8,
             out("r9") r9,
         );
+    }
 
+    if !cfg!(debug_assertions) {
+        panic::always_abort();
+    }
+
+    unsafe {
         if REAL_LIBC_START_MAIN.is_none() {
             let handle = dlopen(
                 CString::new("/lib/libc.so.6").unwrap().into_raw(),
@@ -77,17 +84,14 @@ pub extern "C" fn free(ptr: *mut c_void) {
         FREE_RECURSION_GUARD = false;
     }
 
-    if unsafe{ !MAIN_STARTED } {
+    if unsafe { !MAIN_STARTED } {
         unsafe {
             if REAL_FREE.is_none() {
                 let handle = dlopen(
                     CString::new("/lib/libc.so.6").unwrap().into_raw(),
                     RTLD_LAZY | RTLD_LOCAL,
                 );
-                REAL_FREE = Some(dlsym(
-                    handle,
-                    CString::new("free").unwrap().into_raw(),
-                ));
+                REAL_FREE = Some(dlsym(handle, CString::new("free").unwrap().into_raw()));
                 dlclose(handle);
             }
 
