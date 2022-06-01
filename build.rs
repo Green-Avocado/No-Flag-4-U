@@ -7,6 +7,7 @@ fn main() {
     lib_path.push("deps");
     lib_path
         .push("lib".to_owned() + &env::var("CARGO_PKG_NAME").unwrap().replace('-', "_") + ".so");
+
     println!(
         "cargo:rustc-env=INLINE_C_RS_LD_PRELOAD={path}",
         path = lib_path.as_path().to_string_lossy()

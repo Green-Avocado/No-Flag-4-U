@@ -7,7 +7,14 @@ use std::{
 
 // TODO: hook vprintf and use printf as a wrapper for vprintf
 
-// TODO: increase limit of args (currently <= 6)
+/*
+    Wraps printf
+    - if the format string is non-constant, replace with a safe version
+    - if the format string contains disallowed directives, panic
+
+    TODO: increase limit of args (currently <= 6)
+    TODO: enforce limit on args (currently continues to read from the stack)
+*/
 #[no_mangle]
 pub unsafe extern "C" fn printf(mut format: *const c_char, mut args: ...) {
     let mut arg2: usize = args.arg();

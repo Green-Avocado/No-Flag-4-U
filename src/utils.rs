@@ -9,6 +9,9 @@ pub struct PageInfo {
     pub file: Option<String>,
 }
 
+/*
+    Parses /proc/self/maps to return information about the page a pointer resides in
+*/
 pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     const PARSE_ERR: &str = "failed to parse maps";
     let mut page_info = None;
