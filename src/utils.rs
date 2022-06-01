@@ -1,5 +1,5 @@
 use libc::c_void;
-use std::fs;
+use std::{arch::asm, fs};
 use zeroize::Zeroize;
 
 pub struct PageInfo {
@@ -36,6 +36,15 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
 
             columns.advance_by(3).expect(PARSE_ERR);
             let file = columns.next().map(str::to_string);
+
+            let rsp: usize;
+            unsafe {
+                asm!("mov {}, rsp", out(reg) rsp);
+            }
+
+            if file == Some("[stack]".to_string()) && rsp > ptr as usize {
+                panic!("dangling stack pointer");
+            }
 
             page_info = Some(PageInfo {
                 read,
