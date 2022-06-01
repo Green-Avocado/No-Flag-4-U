@@ -1,6 +1,6 @@
 use inline_c::assert_c;
 use libc::c_char;
-use std::ffi::CString;
+use std::{ffi::CString, panic};
 use super_safe_glibc_wrappers::preload_hooks::format_strings::printf;
 
 #[test]
@@ -43,5 +43,6 @@ fn test_printf_stdout_heap() {
 #[test]
 #[should_panic]
 fn test_free_invalid() {
+    _ = panic::take_hook();
     unsafe { printf(1 as *const c_char) };
 }
