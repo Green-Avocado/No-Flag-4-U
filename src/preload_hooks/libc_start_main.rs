@@ -4,25 +4,13 @@ use std::{arch::asm, ffi::CString, panic, process::exit, sync::atomic::Ordering}
 
 #[no_mangle]
 pub unsafe extern "C" fn __libc_start_main(
-    _main: extern "C" fn(c_int, *const *const c_char, *const *const c_char) -> c_int,
+    main: extern "C" fn(c_int, *const *const c_char, *const *const c_char) -> c_int,
+    arg2: usize,
+    arg3: usize,
+    arg4: usize,
+    arg5: usize,
+    arg6: usize,
 ) {
-    let rdi: usize;
-    let rsi: usize;
-    let rdx: usize;
-    let rcx: usize;
-    let r8: usize;
-    let r9: usize;
-
-    asm!(
-        "nop",
-        out("rdi") rdi,
-        out("rsi") rsi,
-        out("rdx") rdx,
-        out("rcx") rcx,
-        out("r8") r8,
-        out("r9") r9,
-    );
-
     if !cfg!(debug_assertions) {
         panic::set_hook(Box::new(|_| {
             exit(-1);
@@ -45,13 +33,12 @@ pub unsafe extern "C" fn __libc_start_main(
         "leave",
         "jmp rax",
         in("rax") real_sym,
-        in("rdi") rdi,
-        in("rsi") rsi,
-        in("rdx") rdx,
-        in("rcx") rcx,
-        in("r8") r8,
-        in("r9") r9,
+        in("rdi") main,
+        in("rsi") arg2,
+        in("rdx") arg3,
+        in("rcx") arg4,
+        in("r8") arg5,
+        in("r9") arg6,
+        options(noreturn),
     );
-
-    unreachable!();
 }
