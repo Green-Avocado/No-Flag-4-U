@@ -30,11 +30,14 @@ pub extern "C" fn printf(format: *const c_char) {
     let page_info =
         get_ptr_info(format as *const _ as *const c_void).expect("invalid format string pointer");
 
+    if page_info.execute || !page_info.read {
+        panic!("invalid format string permissions");
+    }
+
+
     if page_info.file == Some("[stack]".to_string())
         || page_info.file == Some("[heap]".to_string())
-        || !page_info.read
         || page_info.write
-        || page_info.execute
     {
         rsi = rdi;
         rdi = CString::new("%s").unwrap().into_raw() as usize;
