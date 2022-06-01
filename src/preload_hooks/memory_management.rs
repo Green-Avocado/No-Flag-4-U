@@ -19,9 +19,8 @@ pub unsafe extern "C" fn free(ptr: *mut c_void) {
     FREE_RECURSION_GUARD.set(false);
 
     if !MAIN_STARTED.load(Ordering::SeqCst) {
-        let real_sym: extern "C" fn(*mut c_void);
-
-        real_sym = mem::transmute(dlsym(RTLD_NEXT, CString::new("free").unwrap().into_raw()));
+        let real_sym: extern "C" fn(*mut c_void) =
+            mem::transmute(dlsym(RTLD_NEXT, CString::new("free").unwrap().into_raw()));
 
         real_sym(ptr);
     } else {
