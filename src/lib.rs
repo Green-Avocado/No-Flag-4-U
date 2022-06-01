@@ -79,6 +79,8 @@ pub extern "C" fn __libc_start_main() {
             in("r9") r9,
         );
     }
+
+    unreachable!();
 }
 
 #[no_mangle]
@@ -186,6 +188,8 @@ pub extern "C" fn printf(format: *const c_char) {
             in("r9") r9,
         );
     }
+
+    unreachable!();
 }
 
 fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {

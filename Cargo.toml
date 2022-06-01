@@ -8,10 +8,10 @@ edition = "2021"
 [dependencies]
 libc = "0.2"
 zeroize = "1.5"
+inline-c = "0.1"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-
 
 [profile.release]
 strip = true
