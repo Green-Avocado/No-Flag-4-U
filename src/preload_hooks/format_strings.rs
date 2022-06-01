@@ -34,7 +34,6 @@ pub extern "C" fn printf(format: *const c_char) {
         panic!("invalid format string permissions");
     }
 
-
     if page_info.file == Some("[stack]".to_string())
         || page_info.file == Some("[heap]".to_string())
         || page_info.write
