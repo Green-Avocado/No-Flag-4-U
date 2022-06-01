@@ -21,7 +21,7 @@ pub unsafe extern "C" fn __libc_start_main(
 
     MAIN_STARTED.store(true, Ordering::SeqCst);
 
-    let real_sym: extern "C" fn(
+    let real_libc_start_main: extern "C" fn(
         extern "C" fn(c_int, *const *const c_char, *const *const c_char) -> c_int,
         ...
     ) -> c_int = mem::transmute(dlsym(
@@ -29,7 +29,7 @@ pub unsafe extern "C" fn __libc_start_main(
         CString::new("__libc_start_main").unwrap().into_raw(),
     ));
 
-    real_sym(
+    real_libc_start_main(
         main,
         args.arg::<usize>(),
         args.arg::<usize>(),
