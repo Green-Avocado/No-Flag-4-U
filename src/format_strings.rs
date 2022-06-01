@@ -1,4 +1,7 @@
-use crate::{get_ptr_info, LIBC_PATH};
+use crate::{utils::{
+    get_ptr_info,
+    PageInfo,
+}, LIBC_PATH};
 use libc::{c_char, c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
 use std::{
     arch::asm,
