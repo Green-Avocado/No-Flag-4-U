@@ -7,13 +7,7 @@ pub mod libc_start_main;
 pub mod memory_management;
 mod utils;
 
-use libc::{c_void};
-use std::{
-    arch::asm,
-    fs, panic,
-    sync::atomic::{AtomicBool},
-};
-use zeroize::Zeroize;
+use std::sync::atomic::AtomicBool;
 
 const LIBC_PATH: &str = "/usr/lib/libc.so.6";
 static MAIN_STARTED: AtomicBool = AtomicBool::new(false);

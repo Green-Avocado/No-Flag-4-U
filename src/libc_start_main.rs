@@ -1,12 +1,6 @@
 use crate::{LIBC_PATH, MAIN_STARTED};
 use libc::{dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
-use std::{
-    arch::asm,
-    ffi::{CString}, panic,
-    process::exit,
-    sync::atomic::{Ordering},
-};
-
+use std::{arch::asm, ffi::CString, panic, process::exit, sync::atomic::Ordering};
 
 #[no_mangle]
 pub extern "C" fn __libc_start_main() {

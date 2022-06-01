@@ -1,9 +1,5 @@
-use libc::{c_void};
-use std::{
-    arch::asm,
-    fs, panic,
-    sync::atomic::{AtomicBool},
-};
+use libc::c_void;
+use std::{arch::asm, fs, panic};
 use zeroize::Zeroize;
 
 pub struct PageInfo {
