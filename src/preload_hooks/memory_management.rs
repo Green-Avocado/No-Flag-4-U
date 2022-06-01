@@ -7,7 +7,7 @@ thread_local! {
 }
 
 #[no_mangle]
-pub extern "C" fn free(ptr: *mut c_void) {
+pub unsafe extern "C" fn free(ptr: *mut c_void) {
     if ptr as usize == 0 {
         return;
     }
@@ -21,14 +21,12 @@ pub extern "C" fn free(ptr: *mut c_void) {
     if !MAIN_STARTED.load(Ordering::SeqCst) {
         let real_sym: extern "C" fn(*mut c_void);
 
-        unsafe {
-            let handle = dlopen(
-                CString::new(LIBC_PATH).unwrap().into_raw(),
-                RTLD_LAZY | RTLD_LOCAL,
-            );
-            real_sym = mem::transmute(dlsym(handle, CString::new("free").unwrap().into_raw()));
-            dlclose(handle);
-        }
+        let handle = dlopen(
+            CString::new(LIBC_PATH).unwrap().into_raw(),
+            RTLD_LAZY | RTLD_LOCAL,
+        );
+        real_sym = mem::transmute(dlsym(handle, CString::new("free").unwrap().into_raw()));
+        dlclose(handle);
 
         real_sym(ptr);
     } else {
