@@ -1,7 +1,7 @@
 use inline_c::assert_c;
 use libc::c_char;
 use std::ffi::CString;
-use super_safe_glibc_wrappers::format_strings::printf;
+use super_safe_glibc_wrappers::preload_hooks::format_strings::printf;
 
 #[test]
 fn test_printf_normal() {

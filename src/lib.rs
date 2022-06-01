@@ -2,9 +2,7 @@
 #![feature(panic_always_abort)]
 #![feature(local_key_cell_methods)]
 
-pub mod format_strings;
-pub mod libc_start_main;
-pub mod memory_management;
+pub mod preload_hooks;
 mod utils;
 
 use std::sync::atomic::AtomicBool;

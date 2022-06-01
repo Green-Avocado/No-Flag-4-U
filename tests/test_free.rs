@@ -1,5 +1,5 @@
 use libc::c_void;
-use super_safe_glibc_wrappers::memory_management::free;
+use super_safe_glibc_wrappers::preload_hooks::memory_management::free;
 
 #[test]
 fn test_free_zero() {
