@@ -1,5 +1,5 @@
 use libc::c_void;
-use std::{arch::asm, fs, panic};
+use std::fs;
 use zeroize::Zeroize;
 
 pub struct PageInfo {
@@ -11,7 +11,7 @@ pub struct PageInfo {
 
 pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     const PARSE_ERR: &str = "failed to parse maps";
-    let mut ret = None;
+    let mut page_info = None;
 
     let mut contents =
         fs::read_to_string("/proc/self/maps").expect("could not read /proc/self/maps");
@@ -37,16 +37,7 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
             columns.advance_by(3).expect(PARSE_ERR);
             let file = columns.next().map(str::to_string);
 
-            let rsp: usize;
-            unsafe {
-                asm!("mov {}, rsp", out(reg) rsp);
-            }
-
-            if file == Some("[stack]".to_string()) && rsp > ptr as usize {
-                panic!("dangling stack pointer");
-            }
-
-            ret = Some(PageInfo {
+            page_info = Some(PageInfo {
                 read,
                 write,
                 execute,
@@ -57,12 +48,13 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
 
     contents.zeroize();
 
-    ret
+    page_info
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{arch::asm, boxed::Box};
 
     #[test]
     fn test_get_ptr_info_invalid() {
@@ -75,6 +67,27 @@ mod tests {
         let page_info = get_ptr_info(&TEST_VALUE as *const _ as *const c_void).unwrap();
         assert_eq!(page_info.read, true);
         assert_eq!(page_info.write, false);
+        assert_eq!(page_info.execute, false);
+    }
+
+    #[test]
+    fn test_get_ptr_info_stack() {
+        let rsp: usize;
+        unsafe {
+            asm!("mov {}, rsp", out(reg) rsp);
+        }
+        let page_info = get_ptr_info(rsp as *const c_void).unwrap();
+        assert_eq!(page_info.read, true);
+        assert_eq!(page_info.write, true);
+        assert_eq!(page_info.execute, false);
+    }
+
+    #[test]
+    fn test_get_ptr_info_dynamic() {
+        let test_value = Box::new(0x1337);
+        let page_info = get_ptr_info(Box::into_raw(test_value) as *const c_void).unwrap();
+        assert_eq!(page_info.read, true);
+        assert_eq!(page_info.write, true);
         assert_eq!(page_info.execute, false);
     }
 }
