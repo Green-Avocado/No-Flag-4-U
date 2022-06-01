@@ -1,5 +1,5 @@
-use crate::{LIBC_PATH, MAIN_STARTED};
-use libc::{c_char, c_int, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
+use crate::MAIN_STARTED;
+use libc::{c_char, c_int, dlsym, RTLD_NEXT};
 use std::{arch::asm, ffi::CString, panic, process::exit, sync::atomic::Ordering};
 
 #[no_mangle]
@@ -17,15 +17,10 @@ pub unsafe extern "C" fn __libc_start_main(
         }));
     }
 
-    let handle = dlopen(
-        CString::new(LIBC_PATH).unwrap().into_raw(),
-        RTLD_LAZY | RTLD_LOCAL,
-    );
     let real_sym = dlsym(
-        handle,
+        RTLD_NEXT,
         CString::new("__libc_start_main").unwrap().into_raw(),
     );
-    dlclose(handle);
 
     MAIN_STARTED.store(true, Ordering::SeqCst);
 

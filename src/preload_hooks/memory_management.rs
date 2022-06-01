@@ -1,5 +1,5 @@
-use crate::{utils::get_ptr_info, LIBC_PATH, MAIN_STARTED};
-use libc::{c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
+use crate::{utils::get_ptr_info, MAIN_STARTED};
+use libc::{c_void, dlsym, RTLD_NEXT};
 use std::{cell::Cell, ffi::CString, mem, panic, sync::atomic::Ordering};
 
 thread_local! {
@@ -21,12 +21,7 @@ pub unsafe extern "C" fn free(ptr: *mut c_void) {
     if !MAIN_STARTED.load(Ordering::SeqCst) {
         let real_sym: extern "C" fn(*mut c_void);
 
-        let handle = dlopen(
-            CString::new(LIBC_PATH).unwrap().into_raw(),
-            RTLD_LAZY | RTLD_LOCAL,
-        );
-        real_sym = mem::transmute(dlsym(handle, CString::new("free").unwrap().into_raw()));
-        dlclose(handle);
+        real_sym = mem::transmute(dlsym(RTLD_NEXT, CString::new("free").unwrap().into_raw()));
 
         real_sym(ptr);
     } else {

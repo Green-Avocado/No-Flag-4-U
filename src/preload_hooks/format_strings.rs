@@ -1,5 +1,5 @@
-use crate::{utils::get_ptr_info, LIBC_PATH};
-use libc::{c_char, c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
+use crate::utils::get_ptr_info;
+use libc::{c_char, c_void, dlsym, RTLD_NEXT};
 use std::{
     arch::asm,
     ffi::{CStr, CString},
@@ -37,12 +37,7 @@ pub unsafe extern "C" fn printf(mut format: *const c_char, mut args: ...) {
         }
     }
 
-    let handle = dlopen(
-        CString::new(LIBC_PATH).unwrap().into_raw(),
-        RTLD_LAZY | RTLD_LOCAL,
-    );
-    let real_sym = dlsym(handle, CString::new("printf").unwrap().into_raw());
-    dlclose(handle);
+    let real_sym = dlsym(RTLD_NEXT, CString::new("printf").unwrap().into_raw());
 
     asm!(
         "leave",
