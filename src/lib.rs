@@ -6,14 +6,11 @@ pub mod format_strings;
 pub mod libc_start_main;
 pub mod memory_management;
 
-use libc::{c_char, c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
+use libc::{c_void};
 use std::{
     arch::asm,
-    cell::Cell,
-    ffi::{CStr, CString},
     fs, panic,
-    process::exit,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{AtomicBool},
 };
 use zeroize::Zeroize;
 

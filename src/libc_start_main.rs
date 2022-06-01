@@ -1,14 +1,12 @@
 use crate::{LIBC_PATH, MAIN_STARTED};
-use libc::{c_char, c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
+use libc::{dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
 use std::{
     arch::asm,
-    cell::Cell,
-    ffi::{CStr, CString},
-    fs, panic,
+    ffi::{CString}, panic,
     process::exit,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{Ordering},
 };
-use zeroize::Zeroize;
+
 
 #[no_mangle]
 pub extern "C" fn __libc_start_main() {

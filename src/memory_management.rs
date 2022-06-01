@@ -1,14 +1,12 @@
 use crate::{get_ptr_info, LIBC_PATH, MAIN_STARTED};
-use libc::{c_char, c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
+use libc::{c_void, dlclose, dlopen, dlsym, RTLD_LAZY, RTLD_LOCAL};
 use std::{
     arch::asm,
     cell::Cell,
-    ffi::{CStr, CString},
-    fs, panic,
-    process::exit,
-    sync::atomic::{AtomicBool, Ordering},
+    ffi::{CString}, panic,
+    sync::atomic::{Ordering},
 };
-use zeroize::Zeroize;
+
 
 thread_local! {
     static FREE_RECURSION_GUARD: Cell<bool> = Cell::new(true);
