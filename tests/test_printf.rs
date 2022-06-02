@@ -4,12 +4,12 @@ use std::{ffi::CString, panic};
 use super_safe_glibc_wrappers::preload_hooks::format_strings::printf;
 
 #[test]
-fn test_printf_normal() {
+fn test_normal() {
     unsafe { printf(CString::new("Hello, world!\n").unwrap().into_raw()) };
 }
 
 #[test]
-fn test_printf_stdout_normal() {
+fn test_stdout_normal() {
     (assert_c! {
         #include <stdio.h>
 
@@ -23,7 +23,7 @@ fn test_printf_stdout_normal() {
 }
 
 #[test]
-fn test_printf_stdout_heap() {
+fn test_stdout_heap() {
     (assert_c! {
         #include <stdio.h>
         #include <stdlib.h>
@@ -42,7 +42,7 @@ fn test_printf_stdout_heap() {
 
 #[test]
 #[should_panic]
-fn test_free_invalid() {
+fn test_invalid() {
     _ = panic::take_hook();
     unsafe { printf(1 as *const c_char) };
 }
