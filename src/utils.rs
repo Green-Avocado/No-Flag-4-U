@@ -1,5 +1,5 @@
-use libc::c_void;
-use std::{arch::asm, fs};
+use libc::{c_void, dlsym, RTLD_NEXT};
+use std::{arch::asm, ffi::CString, fs};
 use zeroize::Zeroize;
 
 pub struct PageInfo {
@@ -7,6 +7,13 @@ pub struct PageInfo {
     pub write: bool,
     pub execute: bool,
     pub file: Option<String>,
+}
+
+/*
+    Wrapps dlsym() to get the next pointer for a symbol
+*/
+pub unsafe fn dlsym_next(symbol: &str) -> *mut c_void {
+    dlsym(RTLD_NEXT, CString::new(symbol).unwrap().into_raw())
 }
 
 /*

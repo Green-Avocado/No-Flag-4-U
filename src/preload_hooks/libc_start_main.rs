@@ -1,6 +1,6 @@
-use crate::MAIN_STARTED;
-use libc::{c_char, c_int, dlsym, RTLD_NEXT};
-use std::{ffi::CString, mem, panic, process::exit, sync::atomic::Ordering};
+use crate::{utils, MAIN_STARTED};
+use libc::{c_char, c_int};
+use std::{mem, panic, process::exit, sync::atomic::Ordering};
 
 /*
     Hooks __libc_start_main
@@ -33,10 +33,7 @@ pub unsafe extern "C" fn __libc_start_main(
     let real_libc_start_main: extern "C" fn(
         extern "C" fn(c_int, *const *const c_char, *const *const c_char) -> c_int,
         ...
-    ) -> c_int = mem::transmute(dlsym(
-        RTLD_NEXT,
-        CString::new("__libc_start_main").unwrap().into_raw(),
-    ));
+    ) -> c_int = mem::transmute(utils::dlsym_next("__libc_start_main"));
 
     real_libc_start_main(
         main,
