@@ -1,6 +1,6 @@
 use libc::c_void;
-use std::panic;
 use somewhat_safe_glibc_wrappers::preload_hooks::memory_management::free;
+use std::panic;
 
 #[test]
 fn test_zero() {

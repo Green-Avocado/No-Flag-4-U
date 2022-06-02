@@ -1,7 +1,7 @@
 use inline_c::assert_c;
 use libc::c_char;
-use std::{ffi::CString, panic};
 use somewhat_safe_glibc_wrappers::preload_hooks::format_strings::printf;
+use std::{ffi::CString, panic};
 
 #[test]
 fn test_normal() {
