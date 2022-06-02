@@ -19,6 +19,15 @@ pub unsafe extern "C" fn __libc_start_main(
         }));
     }
 
+    if cfg!(enable_logging) {
+        // TODO: instantiate logger
+
+        panic::update_hook(move |prev, info| {
+            // TODO: close logging file pointer
+            prev(info);
+        });
+    }
+
     MAIN_STARTED.store(true, Ordering::SeqCst);
 
     let real_libc_start_main: extern "C" fn(

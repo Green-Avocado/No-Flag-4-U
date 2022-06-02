@@ -1,4 +1,4 @@
-use crate::utils::get_ptr_info;
+use crate::utils;
 use libc::{c_char, c_int, c_void, dlsym, size_t, FILE, RTLD_NEXT};
 use std::{
     ffi::{CStr, CString, VaList},
@@ -191,7 +191,8 @@ pub unsafe extern "C" fn sprintf(s: *mut c_char, format: *const c_char, mut args
     - panics if format string is dangerous
 */
 fn check_format_string(format: *const c_char) -> FormatStringResult {
-    let page_info = get_ptr_info(format as *const c_void).expect("invalid format string pointer");
+    let page_info =
+        utils::get_ptr_info(format as *const c_void).expect("invalid format string pointer");
 
     if page_info.execute || !page_info.read {
         panic!("invalid format string permissions");

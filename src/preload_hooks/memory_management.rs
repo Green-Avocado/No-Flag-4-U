@@ -1,4 +1,4 @@
-use crate::{utils::get_ptr_info, MAIN_STARTED};
+use crate::{utils, MAIN_STARTED};
 use libc::c_void;
 use std::{cell::Cell, panic, sync::atomic::Ordering};
 
@@ -25,7 +25,7 @@ pub unsafe extern "C" fn free(ptr: *mut c_void) {
     FREE_RECURSION_GUARD.set(false);
 
     if MAIN_STARTED.load(Ordering::SeqCst) {
-        let page_info = get_ptr_info(ptr).expect("freeing invalid pointer");
+        let page_info = utils::get_ptr_info(ptr).expect("freeing invalid pointer");
 
         if !(page_info.read && page_info.write && !page_info.execute) {
             panic!("freeing invalid permissions");

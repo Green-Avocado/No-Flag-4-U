@@ -1,5 +1,5 @@
 #![feature(iter_advance_by)]
-#![feature(panic_always_abort)]
+#![feature(panic_update_hook)]
 #![feature(local_key_cell_methods)]
 #![feature(c_variadic)]
 

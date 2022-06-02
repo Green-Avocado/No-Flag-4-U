@@ -63,6 +63,10 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     page_info
 }
 
+pub fn log() {
+    // TODO: log to file
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
