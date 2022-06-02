@@ -1,11 +1,11 @@
 use inline_c::assert_c;
 use libc::c_char;
 use somewhat_safe_glibc_wrappers::preload_hooks::format_strings::printf;
-use std::{ffi::CString, panic};
+use std::panic;
 
 #[test]
 fn test_normal() {
-    unsafe { printf(CString::new("Hello, world!\n").unwrap().into_raw()) };
+    unsafe { printf("Hello, world!\n\0".as_ptr() as *const c_char) };
 }
 
 #[test]

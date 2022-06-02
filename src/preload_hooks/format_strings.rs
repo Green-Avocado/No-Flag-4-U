@@ -195,6 +195,19 @@ pub unsafe extern "C" fn sprintf(s: *mut c_char, format: *const c_char, mut args
     - panics if format string is dangerous
 */
 fn check_format_string(format: *const c_char) -> FormatStringResult {
+    let page_info = get_ptr_info(format as *const c_void).expect("invalid format string pointer");
+
+    if page_info.execute || !page_info.read {
+        panic!("invalid format string permissions");
+    }
+
+    if page_info.file == Some("[stack]".to_string())
+        || page_info.file == Some("[heap]".to_string())
+        || page_info.write
+    {
+        return FormatStringResult::NonConstant;
+    }
+
     if cfg!(disallow_dangerous_printf) {
         let s = unsafe { CStr::from_ptr(format) }
             .to_str()
@@ -220,19 +233,6 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
         }
     }
 
-    let page_info = get_ptr_info(format as *const c_void).expect("invalid format string pointer");
-
-    if page_info.execute || !page_info.read {
-        panic!("invalid format string permissions");
-    }
-
-    if page_info.file == Some("[stack]".to_string())
-        || page_info.file == Some("[heap]".to_string())
-        || page_info.write
-    {
-        return FormatStringResult::NonConstant;
-    }
-
     FormatStringResult::NoRisk
 }
 
@@ -245,5 +245,13 @@ mod tests {
     fn test_check_format_string_null() {
         _ = panic::take_hook();
         check_format_string(0 as *const c_char);
+    }
+
+    #[cfg(disallow_dangerous_printf)]
+    #[test]
+    #[should_panic]
+    fn test_check_basic_n_directive() {
+        _ = panic::take_hook();
+        check_format_string("%n\0".as_ptr() as *const c_char);
     }
 }
