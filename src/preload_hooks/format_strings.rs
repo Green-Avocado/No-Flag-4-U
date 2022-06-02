@@ -5,6 +5,11 @@ use std::{
     mem, panic,
 };
 
+enum FormatStringResult {
+    NoRisk,
+    NonConstant,
+}
+
 extern "C" {
     static stdout: *mut FILE;
 }
@@ -17,19 +22,23 @@ extern "C" {
 */
 #[no_mangle]
 pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: VaList) -> c_int {
-    if check_format_string(format) {
-        let real_vfprintf: extern "C" fn(*mut FILE, *const c_char, VaList) -> c_int =
-            mem::transmute(dlsym(
-                RTLD_NEXT,
-                CString::new("vfprintf").unwrap().into_raw(),
-            ));
-
-        real_vfprintf(stream, format, ap)
-    } else {
-        let real_fprintf: extern "C" fn(*mut FILE, *const c_char, ...) -> c_int = mem::transmute(
-            dlsym(RTLD_NEXT, CString::new("fprintf").unwrap().into_raw()),
-        );
-        real_fprintf(stream, CString::new("%s").unwrap().into_raw(), format)
+    match check_format_string(format) {
+        FormatStringResult::NoRisk => {
+            let real_vfprintf: extern "C" fn(*mut FILE, *const c_char, VaList) -> c_int =
+                mem::transmute(dlsym(
+                    RTLD_NEXT,
+                    CString::new("vfprintf").unwrap().into_raw(),
+                ));
+            real_vfprintf(stream, format, ap)
+        }
+        FormatStringResult::NonConstant => {
+            let real_fprintf: extern "C" fn(*mut FILE, *const c_char, ...) -> c_int =
+                mem::transmute(dlsym(
+                    RTLD_NEXT,
+                    CString::new("fprintf").unwrap().into_raw(),
+                ));
+            real_fprintf(stream, CString::new("%s").unwrap().into_raw(), format)
+        }
     }
 }
 
@@ -68,17 +77,21 @@ pub unsafe extern "C" fn printf(format: *const c_char, mut args: ...) -> c_int {
 */
 #[no_mangle]
 pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) -> c_int {
-    if check_format_string(format) {
-        let real_vdprintf: extern "C" fn(c_int, *const c_char, VaList) -> c_int = mem::transmute(
-            dlsym(RTLD_NEXT, CString::new("vdprintf").unwrap().into_raw()),
-        );
-
-        real_vdprintf(fd, format, ap)
-    } else {
-        let real_dprintf: extern "C" fn(c_int, *const c_char, ...) -> c_int = mem::transmute(
-            dlsym(RTLD_NEXT, CString::new("dprintf").unwrap().into_raw()),
-        );
-        real_dprintf(fd, CString::new("%s").unwrap().into_raw(), format)
+    match check_format_string(format) {
+        FormatStringResult::NoRisk => {
+            let real_vdprintf: extern "C" fn(c_int, *const c_char, VaList) -> c_int =
+                mem::transmute(dlsym(
+                    RTLD_NEXT,
+                    CString::new("vdprintf").unwrap().into_raw(),
+                ));
+            real_vdprintf(fd, format, ap)
+        }
+        FormatStringResult::NonConstant => {
+            let real_dprintf: extern "C" fn(c_int, *const c_char, ...) -> c_int = mem::transmute(
+                dlsym(RTLD_NEXT, CString::new("dprintf").unwrap().into_raw()),
+            );
+            real_dprintf(fd, CString::new("%s").unwrap().into_raw(), format)
+        }
     }
 }
 
@@ -97,7 +110,7 @@ pub unsafe extern "C" fn dprintf(fd: c_int, format: *const c_char, mut args: ...
     - returns false if non-constant
     - panics if format string is dangerous
 */
-fn check_format_string(format: *const c_char) -> bool {
+fn check_format_string(format: *const c_char) -> FormatStringResult {
     if cfg!(disallow_dangerous_printf) {
         let s = unsafe { CStr::from_ptr(format) }
             .to_str()
@@ -113,7 +126,12 @@ fn check_format_string(format: *const c_char) -> bool {
         panic!("invalid format string permissions");
     }
 
-    !(page_info.file == Some("[stack]".to_string())
+    if page_info.file == Some("[stack]".to_string())
         || page_info.file == Some("[heap]".to_string())
-        || page_info.write)
+        || page_info.write
+    {
+        return FormatStringResult::NonConstant;
+    }
+
+    FormatStringResult::NoRisk
 }
