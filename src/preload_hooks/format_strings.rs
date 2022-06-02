@@ -199,8 +199,24 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
         let s = unsafe { CStr::from_ptr(format) }
             .to_str()
             .expect("invalid format string");
-        if s.contains("%n") {
-            panic!("dangerous conversion specifier prohibited");
+
+        let mut directive_in_progress = false;
+
+        for c in s.chars() {
+            if directive_in_progress {
+                match c {
+                    'n' => panic!("dangerous conversion specifier prohibited"),
+                    '*' | '.' | '$' => (), // field width, precision, '$'
+                    '#' | '0' | '-' | ' ' | '+' | '\'' | 'I' => (), // flags
+                    'h' | 'l' | 'q' | 'L' | 'j' | 'z' | 'Z' | 't' => (), // length modifier
+                    d if d.is_digit(10) => (),
+                    _ => directive_in_progress = false,
+                }
+            } else {
+                if c == '%' {
+                    directive_in_progress = true;
+                }
+            }
         }
     }
 
@@ -218,4 +234,15 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
     }
 
     FormatStringResult::NoRisk
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn test_check_format_string_null() {
+        check_format_string(0 as *const c_char);
+    }
 }
