@@ -1,6 +1,9 @@
 use crate::utils;
 use libc::{c_char, c_int, c_void, size_t, FILE};
-use std::{ffi::{CStr, VaList}, mem, panic};
+use std::{
+    ffi::{CStr, VaList},
+    mem, panic,
+};
 
 enum FormatStringResult {
     LowRisk,
