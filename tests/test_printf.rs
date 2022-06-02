@@ -90,7 +90,7 @@ fn test_n_directives() {
         #include <string.h>
 
         int main() {
-            int n;
+            char n;
             printf("Test String%1$hhn", &n);
             return 0;
         }
