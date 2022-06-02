@@ -1,5 +1,5 @@
 [package]
-name = "super-safe-glibc-wrappers"
+name = "somewhat-safe-glibc-wrappers"
 version = "0.1.0"
 edition = "2021"
 
