@@ -72,6 +72,34 @@ fn test_heap_and_stack() {
     .stdout("%p\n");
 }
 
+#[cfg(disallow_dangerous_printf)]
+#[test]
+fn test_n_directives() {
+    (assert_c! {
+        #include <stdio.h>
+        #include <string.h>
+
+        int main() {
+            int n;
+            printf("Hello, world!%n", n);
+            return 0;
+        }
+    })
+    .failure();
+
+    (assert_c! {
+        #include <stdio.h>
+        #include <string.h>
+
+        int main() {
+            int n;
+            printf("Test String%1$hhn", n);
+            return 0;
+        }
+    })
+    .failure();
+}
+
 #[test]
 #[should_panic]
 fn test_invalid() {
