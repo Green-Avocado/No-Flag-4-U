@@ -18,7 +18,30 @@ fn test_normal() {
 }
 
 #[test]
-fn test_heap() {
+fn test_6_directives() {
+    (assert_c! {
+        #include <stdio.h>
+
+        int main() {
+            printf(
+                "%d\n%c\n%lx\n%05u\n%s\n%.2f\n",
+                13, 'c', (unsigned long) -1, 11, "Test", 1.1);
+            return 0;
+        }
+    })
+    .success()
+    .stdout(
+        "13\n\
+        c\n\
+        ffffffffffffffff\n\
+        00011\n\
+        Test\n\
+        1.10\n",
+    );
+}
+
+#[test]
+fn test_heap_and_stack() {
     (assert_c! {
         #include <stdio.h>
         #include <stdlib.h>
@@ -26,6 +49,20 @@ fn test_heap() {
 
         int main() {
             char* s = malloc(8);
+            strncpy(s, "%p\n", 8);
+            printf(s);
+            return 0;
+        }
+    })
+    .success()
+    .stdout("%p\n");
+
+    (assert_c! {
+        #include <stdio.h>
+        #include <string.h>
+
+        int main() {
+            char s[8];
             strncpy(s, "%p\n", 8);
             printf(s);
             return 0;
