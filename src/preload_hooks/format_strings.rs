@@ -1,6 +1,6 @@
 use crate::utils;
 use libc::{c_char, c_int, c_void, size_t, FILE};
-use std::{ffi::VaList, mem, panic};
+use std::{ffi::{CStr, VaList}, mem, panic};
 
 enum FormatStringResult {
     LowRisk,
@@ -182,9 +182,8 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
         return FormatStringResult::NonConstant;
     }
 
-    #[cfg(disallow_dangerous_printf)]
-    {
-        let s = unsafe { std::ffi::CStr::from_ptr(format) }
+    if cfg!(disallow_dangerous_printf) {
+        let s = unsafe { CStr::from_ptr(format) }
             .to_str()
             .expect("invalid format string");
 
@@ -234,6 +233,14 @@ mod tests {
     #[test]
     fn test_check_basic_n_directive() {
         check_format_string("%n\0".as_ptr() as *const c_char);
+    }
+
+    #[cfg(disallow_dangerous_printf)]
+    #[test]
+    #[should_panic]
+    fn test_check_complex_n_directive() {
+        _ = panic::take_hook();
+        check_format_string("%1$hhn\0".as_ptr() as *const c_char);
     }
 
     #[cfg(not(disallow_dangerous_printf))]

@@ -72,7 +72,6 @@ fn test_heap_and_stack() {
     .stdout("%p\n");
 }
 
-#[cfg(disallow_dangerous_printf)]
 #[test]
 fn test_n_directives() {
     let mut assertion_simple = assert_c! {
