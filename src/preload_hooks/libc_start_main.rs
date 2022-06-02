@@ -1,6 +1,6 @@
 use crate::{utils, MAIN_STARTED};
-use libc::{c_char, c_int};
-use std::{mem, panic, process::exit, sync::atomic::Ordering};
+use libc::{c_char, c_int, SYS_exit_group};
+use std::{arch::asm, mem, panic, sync::atomic::Ordering};
 
 /*
     Hooks __libc_start_main
@@ -15,7 +15,11 @@ pub unsafe extern "C" fn __libc_start_main(
 ) -> c_int {
     if !(cfg!(debug_assertions)) {
         panic::set_hook(Box::new(|_| {
-            exit(-1);
+            asm!(
+                "syscall",
+                in("rax") SYS_exit_group,
+                in("rdi") -1,
+            )
         }));
     }
 
