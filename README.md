@@ -1,9 +1,9 @@
-# super-safe-glibc-wrappers
+# Somewhat Safe Glibc Wrappers
 
 ## Features
 
 - Memory is never freed after `__libc_start_main()` to prevent UAF
-- Disabled non-constant format strings for `printf()`
+- Safely wraps non-constant format strings for `printf()`
 
 ## Usage
 
