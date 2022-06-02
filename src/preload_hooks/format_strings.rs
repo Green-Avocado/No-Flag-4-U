@@ -5,6 +5,7 @@ use std::{
     mem, panic,
 };
 
+#[derive(Debug, PartialEq)]
 enum FormatStringResult {
     LowRisk,
     NonConstant,
@@ -216,12 +217,31 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CString;
 
     #[test]
     #[should_panic]
     fn test_check_format_string_null() {
         _ = panic::take_hook();
         check_format_string(0 as *const c_char);
+    }
+
+    #[test]
+    fn test_normal() {
+        assert_eq!(
+            check_format_string("%d %s Test String!\0".as_ptr() as *const c_char),
+            FormatStringResult::LowRisk
+        );
+    }
+
+    #[test]
+    fn test_nonconstant() {
+        assert_eq!(
+            check_format_string(
+                CString::new("%d %s Test String!").unwrap().into_raw() as *const c_char
+            ),
+            FormatStringResult::NonConstant
+        );
     }
 
     #[cfg(disallow_dangerous_printf)]
