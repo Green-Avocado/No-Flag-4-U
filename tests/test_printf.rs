@@ -75,7 +75,7 @@ fn test_heap_and_stack() {
 #[cfg(disallow_dangerous_printf)]
 #[test]
 fn test_n_directives() {
-    (assert_c! {
+    let mut assertion_simple = assert_c! {
         #include <stdio.h>
         #include <string.h>
 
@@ -84,10 +84,9 @@ fn test_n_directives() {
             printf("Hello, world!%n", n);
             return 0;
         }
-    })
-    .failure();
+    };
 
-    (assert_c! {
+    let mut assertion_complex = assert_c! {
         #include <stdio.h>
         #include <string.h>
 
@@ -96,8 +95,15 @@ fn test_n_directives() {
             printf("Test String%1$hhn", n);
             return 0;
         }
-    })
-    .failure();
+    };
+
+    if cfg!(disallow_dangerous_printf) {
+        assertion_simple.failure();
+        assertion_complex.failure();
+    } else {
+        assertion_simple.success();
+        assertion_complex.success();
+    }
 }
 
 #[test]
