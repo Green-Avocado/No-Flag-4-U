@@ -1,5 +1,5 @@
 use crate::utils::get_ptr_info;
-use libc::{c_char, c_int, c_void, dlsym, FILE, RTLD_NEXT};
+use libc::{c_char, c_int, c_void, dlsym, size_t, FILE, RTLD_NEXT};
 use std::{
     ffi::{CStr, CString, VaList},
     mem, panic,
@@ -102,6 +102,90 @@ pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) 
 #[no_mangle]
 pub unsafe extern "C" fn dprintf(fd: c_int, format: *const c_char, mut args: ...) -> c_int {
     vdprintf(fd, format, args.as_va_list())
+}
+
+/*
+    Hooks vsprintf
+    - if the format string is non-constant, replace with a safe version
+    - if the format string contains disallowed directives, panic
+    - calls vsprintf in glibc with modified arguments to mitigate security risks
+*/
+#[no_mangle]
+pub unsafe extern "C" fn vsnprintf(
+    s: *mut c_char,
+    size: size_t,
+    format: *const c_char,
+    ap: VaList,
+) -> c_int {
+    match check_format_string(format) {
+        FormatStringResult::NoRisk => {
+            let real_vsnprintf: extern "C" fn(*mut c_char, size_t, *const c_char, VaList) -> c_int =
+                mem::transmute(dlsym(
+                    RTLD_NEXT,
+                    CString::new("vsnprintf").unwrap().into_raw(),
+                ));
+            real_vsnprintf(s, size, format, ap)
+        }
+        FormatStringResult::NonConstant => {
+            let real_snprintf: extern "C" fn(*mut c_char, size_t, *const c_char, ...) -> c_int =
+                mem::transmute(dlsym(
+                    RTLD_NEXT,
+                    CString::new("snprintf").unwrap().into_raw(),
+                ));
+            real_snprintf(s, size, CString::new("%s").unwrap().into_raw(), format)
+        }
+    }
+}
+
+/*
+    Hooks snprintf
+    - passes call to vsnprintf
+*/
+#[no_mangle]
+pub unsafe extern "C" fn snprintf(
+    s: *mut c_char,
+    size: size_t,
+    format: *const c_char,
+    mut args: ...
+) -> c_int {
+    vsnprintf(s, size, format, args.as_va_list())
+}
+
+/*
+    Hooks vsprintf
+    - if the format string is non-constant, replace with a safe version
+    - if the format string contains disallowed directives, panic
+    - calls vsprintf in glibc with modified arguments to mitigate security risks
+*/
+#[no_mangle]
+pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaList) -> c_int {
+    match check_format_string(format) {
+        FormatStringResult::NoRisk => {
+            let real_vsprintf: extern "C" fn(*mut c_char, *const c_char, VaList) -> c_int =
+                mem::transmute(dlsym(
+                    RTLD_NEXT,
+                    CString::new("vsprintf").unwrap().into_raw(),
+                ));
+            real_vsprintf(s, format, ap)
+        }
+        FormatStringResult::NonConstant => {
+            let real_sprintf: extern "C" fn(*mut c_char, *const c_char, ...) -> c_int =
+                mem::transmute(dlsym(
+                    RTLD_NEXT,
+                    CString::new("sprintf").unwrap().into_raw(),
+                ));
+            real_sprintf(s, CString::new("%s").unwrap().into_raw(), format)
+        }
+    }
+}
+
+/*
+    Hooks sprintf
+    - passes call to vsprintf
+*/
+#[no_mangle]
+pub unsafe extern "C" fn sprintf(s: *mut c_char, format: *const c_char, mut args: ...) -> c_int {
+    vsprintf(s, format, args.as_va_list())
 }
 
 /*
