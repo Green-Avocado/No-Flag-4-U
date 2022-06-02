@@ -5,11 +5,6 @@ use std::panic;
 
 #[test]
 fn test_normal() {
-    unsafe { printf("Hello, world!\n\0".as_ptr() as *const c_char) };
-}
-
-#[test]
-fn test_stdout_normal() {
     (assert_c! {
         #include <stdio.h>
 
@@ -23,7 +18,7 @@ fn test_stdout_normal() {
 }
 
 #[test]
-fn test_stdout_heap() {
+fn test_heap() {
     (assert_c! {
         #include <stdio.h>
         #include <stdlib.h>
