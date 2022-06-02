@@ -243,6 +243,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_check_format_string_null() {
+        _ = panic::take_hook();
         check_format_string(0 as *const c_char);
     }
 }
