@@ -10,6 +10,6 @@ fn main() {
 
     println!(
         "cargo:rustc-env=INLINE_C_RS_LD_PRELOAD={path}",
-        path = test_lib_path.as_path().to_string_lossy()
+        path = test_lib_path.as_path().to_str().unwrap()
     );
 }
