@@ -6,7 +6,7 @@ use std::{
 };
 
 enum FormatStringResult {
-    NoRisk,
+    LowRisk,
     NonConstant,
 }
 
@@ -17,13 +17,12 @@ extern "C" {
 /*
     Hooks vfprintf
     - if the format string is non-constant, replace with a safe version
-    - if the format string contains disallowed directives, panic
-    - calls vfprintf in glibc with modified arguments to mitigate security risks
+    - calls vfprintf in glibc with potentially modified arguments to mitigate security risks
 */
 #[no_mangle]
 pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: VaList) -> c_int {
     match check_format_string(format) {
-        FormatStringResult::NoRisk => {
+        FormatStringResult::LowRisk => {
             let real_vfprintf: extern "C" fn(*mut FILE, *const c_char, VaList) -> c_int =
                 mem::transmute(dlsym(
                     RTLD_NEXT,
@@ -72,13 +71,12 @@ pub unsafe extern "C" fn printf(format: *const c_char, mut args: ...) -> c_int {
 /*
     Hooks vdprintf
     - if the format string is non-constant, replace with a safe version
-    - if the format string contains disallowed directives, panic
-    - calls vdprintf in glibc with modified arguments to mitigate security risks
+    - calls vdprintf in glibc with potentially modified arguments to mitigate security risks
 */
 #[no_mangle]
 pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) -> c_int {
     match check_format_string(format) {
-        FormatStringResult::NoRisk => {
+        FormatStringResult::LowRisk => {
             let real_vdprintf: extern "C" fn(c_int, *const c_char, VaList) -> c_int =
                 mem::transmute(dlsym(
                     RTLD_NEXT,
@@ -107,8 +105,7 @@ pub unsafe extern "C" fn dprintf(fd: c_int, format: *const c_char, mut args: ...
 /*
     Hooks vsprintf
     - if the format string is non-constant, replace with a safe version
-    - if the format string contains disallowed directives, panic
-    - calls vsprintf in glibc with modified arguments to mitigate security risks
+    - calls vsprintf in glibc with potentially modified arguments to mitigate security risks
 */
 #[no_mangle]
 pub unsafe extern "C" fn vsnprintf(
@@ -118,7 +115,7 @@ pub unsafe extern "C" fn vsnprintf(
     ap: VaList,
 ) -> c_int {
     match check_format_string(format) {
-        FormatStringResult::NoRisk => {
+        FormatStringResult::LowRisk => {
             let real_vsnprintf: extern "C" fn(*mut c_char, size_t, *const c_char, VaList) -> c_int =
                 mem::transmute(dlsym(
                     RTLD_NEXT,
@@ -154,13 +151,12 @@ pub unsafe extern "C" fn snprintf(
 /*
     Hooks vsprintf
     - if the format string is non-constant, replace with a safe version
-    - if the format string contains disallowed directives, panic
-    - calls vsprintf in glibc with modified arguments to mitigate security risks
+    - calls vsprintf in glibc potentially with modified arguments to mitigate security risks
 */
 #[no_mangle]
 pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaList) -> c_int {
     match check_format_string(format) {
-        FormatStringResult::NoRisk => {
+        FormatStringResult::LowRisk => {
             let real_vsprintf: extern "C" fn(*mut c_char, *const c_char, VaList) -> c_int =
                 mem::transmute(dlsym(
                     RTLD_NEXT,
@@ -190,8 +186,8 @@ pub unsafe extern "C" fn sprintf(s: *mut c_char, format: *const c_char, mut args
 
 /*
     Performs sanity checks on the format string
-    - returns true if everything passes
-    - returns false if non-constant
+    - returns FormatStringResult::LowRisk if everything passes
+    - returns FormatStringResult::NonConstant if non-constant
     - panics if format string is dangerous
 */
 fn check_format_string(format: *const c_char) -> FormatStringResult {
@@ -233,7 +229,7 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
         }
     }
 
-    FormatStringResult::NoRisk
+    FormatStringResult::LowRisk
 }
 
 #[cfg(test)]
