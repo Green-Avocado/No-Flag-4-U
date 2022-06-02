@@ -17,36 +17,20 @@ extern "C" {
 */
 #[no_mangle]
 pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: VaList) -> c_int {
-    let page_info = get_ptr_info(format as *const c_void).expect("invalid format string pointer");
+    if check_format_string(format) {
+        let real_vfprintf: extern "C" fn(*mut FILE, *const c_char, VaList) -> c_int =
+            mem::transmute(dlsym(
+                RTLD_NEXT,
+                CString::new("vfprintf").unwrap().into_raw(),
+            ));
 
-    if page_info.execute || !page_info.read {
-        panic!("invalid format string permissions");
-    }
-
-    if page_info.file == Some("[stack]".to_string())
-        || page_info.file == Some("[heap]".to_string())
-        || page_info.write
-    {
+        real_vfprintf(stream, format, ap)
+    } else {
         let real_fprintf: extern "C" fn(*mut FILE, *const c_char, ...) -> c_int = mem::transmute(
             dlsym(RTLD_NEXT, CString::new("fprintf").unwrap().into_raw()),
         );
-        return real_fprintf(stream, CString::new("%s").unwrap().into_raw(), format);
+        real_fprintf(stream, CString::new("%s").unwrap().into_raw(), format)
     }
-
-    if cfg!(disallow_dangerous_printf) {
-        let s = CStr::from_ptr(format)
-            .to_str()
-            .expect("invalid format string");
-        if s.contains("%n") {
-            panic!("dangerous format string prohibited");
-        }
-    }
-
-    let real_vfprintf: extern "C" fn(*mut FILE, *const c_char, VaList) -> c_int = mem::transmute(
-        dlsym(RTLD_NEXT, CString::new("vfprintf").unwrap().into_raw()),
-    );
-
-    real_vfprintf(stream, format, ap)
 }
 
 /*
@@ -74,4 +58,62 @@ pub unsafe extern "C" fn fprintf(stream: *mut FILE, format: *const c_char, mut a
 #[no_mangle]
 pub unsafe extern "C" fn printf(format: *const c_char, mut args: ...) -> c_int {
     vprintf(format, args.as_va_list())
+}
+
+/*
+    Hooks vdprintf
+    - if the format string is non-constant, replace with a safe version
+    - if the format string contains disallowed directives, panic
+    - calls vdprintf in glibc with modified arguments to mitigate security risks
+*/
+#[no_mangle]
+pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) -> c_int {
+    if check_format_string(format) {
+        let real_vdprintf: extern "C" fn(c_int, *const c_char, VaList) -> c_int = mem::transmute(
+            dlsym(RTLD_NEXT, CString::new("vdprintf").unwrap().into_raw()),
+        );
+
+        real_vdprintf(fd, format, ap)
+    } else {
+        let real_dprintf: extern "C" fn(c_int, *const c_char, ...) -> c_int = mem::transmute(
+            dlsym(RTLD_NEXT, CString::new("dprintf").unwrap().into_raw()),
+        );
+        real_dprintf(fd, CString::new("%s").unwrap().into_raw(), format)
+    }
+}
+
+/*
+    Hooks dprintf
+    - passes call to vdprintf
+*/
+#[no_mangle]
+pub unsafe extern "C" fn dprintf(fd: c_int, format: *const c_char, mut args: ...) -> c_int {
+    vdprintf(fd, format, args.as_va_list())
+}
+
+/*
+    Performs sanity checks on the format string
+    - returns true if everything passes
+    - returns false if non-constant
+    - panics if format string is dangerous
+*/
+fn check_format_string(format: *const c_char) -> bool {
+    if cfg!(disallow_dangerous_printf) {
+        let s = unsafe { CStr::from_ptr(format) }
+            .to_str()
+            .expect("invalid format string");
+        if s.contains("%n") {
+            panic!("dangerous conversion specifier prohibited");
+        }
+    }
+
+    let page_info = get_ptr_info(format as *const c_void).expect("invalid format string pointer");
+
+    if page_info.execute || !page_info.read {
+        panic!("invalid format string permissions");
+    }
+
+    !(page_info.file == Some("[stack]".to_string())
+        || page_info.file == Some("[heap]".to_string())
+        || page_info.write)
 }
