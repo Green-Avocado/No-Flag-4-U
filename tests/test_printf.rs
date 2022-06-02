@@ -80,7 +80,7 @@ fn test_n_directives() {
 
         int main() {
             int n;
-            printf("Hello, world!%n", n);
+            printf("Hello, world!%n", &n);
             return 0;
         }
     };
@@ -91,7 +91,7 @@ fn test_n_directives() {
 
         int main() {
             int n;
-            printf("Test String%1$hhn", n);
+            printf("Test String%1$hhn", &n);
             return 0;
         }
     };

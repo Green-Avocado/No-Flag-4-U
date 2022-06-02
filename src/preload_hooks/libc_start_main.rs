@@ -13,7 +13,7 @@ pub unsafe extern "C" fn __libc_start_main(
     main: extern "C" fn(c_int, *const *const c_char, *const *const c_char) -> c_int,
     mut args: ...
 ) -> c_int {
-    if !cfg!(debug_assertions) {
+    if !(cfg!(debug_assertions)) {
         panic::set_hook(Box::new(|_| {
             exit(-1);
         }));
