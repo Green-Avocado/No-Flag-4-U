@@ -244,31 +244,17 @@ mod tests {
         );
     }
 
-    #[cfg(disallow_dangerous_printf)]
     #[test]
-    #[should_panic]
+    #[cfg_attr(disallow_dangerous_printf, should_panic)]
     fn test_check_basic_n_directive() {
         _ = panic::take_hook();
         check_format_string("%n\0".as_ptr() as *const c_char);
     }
 
-    #[cfg(not(disallow_dangerous_printf))]
     #[test]
-    fn test_check_basic_n_directive() {
-        check_format_string("%n\0".as_ptr() as *const c_char);
-    }
-
-    #[cfg(disallow_dangerous_printf)]
-    #[test]
-    #[should_panic]
+    #[cfg_attr(disallow_dangerous_printf, should_panic)]
     fn test_check_complex_n_directive() {
         _ = panic::take_hook();
-        check_format_string("%1$hhn\0".as_ptr() as *const c_char);
-    }
-
-    #[cfg(not(disallow_dangerous_printf))]
-    #[test]
-    fn test_check_complex_n_directive() {
         check_format_string("%1$hhn\0".as_ptr() as *const c_char);
     }
 }
