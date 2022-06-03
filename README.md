@@ -13,14 +13,38 @@ Compile with:
 cargo build --release
 ```
 
-Optionally, disable the use of the `%n` conversion specifier in the `printf()` family with:
+Currently supports only `x86_64-unknown-linux-gnu`.
+
+### Options
+
+By default, this library aims to provide as much safety as possible without breaking most programs.
+However, in some cases it may be desirable to disable or enable certain mitigations.
+
+Enable or disable optional features by passing flags to rustc:
 
 ```
-cargo rustc --release -- --cfg disallow_dangerous_printf
+cargo rustc --release -- --cfg [OPTION]
 ```
+| OPTION | Description |
+|--------------------------------|-----------------------------------------------------------------|
+| `enable_n_directive_filter`    | disallow `%n` conversion specifiers in format strings           |
+| `disable_remote_logging`       | do not allow logging via TCP to foreign hosts                   |
+| `disable_format_string_hooks`  | do not hook libc functions belonging to the `printf()` family   |
+| `disable_heap_hooks`           | do not hook libc functions for managing dynamic memory          |
 
 ## Usage
 
-```
+Call `ld.so` with the `--preload` flag (only affects the original process):
+
+```bash
 ld.so --preload libsuper_safe_glibc_wrappers.so [COMMAND]
+```
+
+OR
+
+Set the `LD_PRELOAD` environment variable (affects child processes):
+
+```bash
+export LD_PRELOAD=libsuper_safe_glibc_wrappers.so
+[COMMAND]
 ```

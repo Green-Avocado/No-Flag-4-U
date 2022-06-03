@@ -23,11 +23,12 @@ pub unsafe extern "C" fn __libc_start_main(
         }));
     }
 
-    if cfg!(enable_logging) {
+    if true {
+        // TODO: check logging env vars
         // TODO: instantiate logger
 
         panic::update_hook(move |prev, info| {
-            // TODO: close logging file pointer
+            // TODO: log panic info
             prev(info);
         });
     }
