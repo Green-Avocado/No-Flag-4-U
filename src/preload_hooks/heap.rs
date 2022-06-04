@@ -11,6 +11,10 @@ thread_local! {
 /// - `FREE_RECURSION_GUARD` prevents recursive calls to `free`.
 /// - Does nothing if `__libc_start_main` has not been called.
 /// - Performs checks without freeing anything if `__libc_start_main` has been called.
+/// 
+/// # Safety
+/// 
+/// This function should not be called.
 #[no_mangle]
 pub unsafe extern "C" fn free(ptr: *mut c_void) {
     if ptr as usize == 0 {

@@ -7,13 +7,17 @@ use std::{arch::asm, mem, panic, sync::atomic::Ordering};
 /// - Sets `MAIN_STARTED` so other functions can switch to safe mode.
 /// - Consumes 8 arguments in case glibc is compiled with `LIBC_START_MAIN_AUXVEC_ARG`.
 /// - Calls `__libc_start_main` in glibc with the original arguments.
+/// 
+/// # Safety
+/// 
+/// This function should never be called directly.
+/// The function is intended to be called by the linker when a program starts.
 #[no_mangle]
-pub unsafe extern "C" fn __libc_start_main(
+unsafe extern "C" fn __libc_start_main(
     main: extern "C" fn(c_int, *const *const c_char, *const *const c_char) -> c_int,
     mut args: ...
 ) -> c_int {
-    #[allow(clippy::nonminimal_bool)]
-    if !(cfg!(debug_assertions)) {
+    if cfg!(not(debug_assertions)) {
         panic::set_hook(Box::new(|_| {
             asm!(
                 "syscall",
