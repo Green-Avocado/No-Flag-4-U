@@ -2,10 +2,15 @@ use libc::{c_void, dlsym, RTLD_NEXT};
 use std::{arch::asm, ffi::CString, fs};
 use zeroize::Zeroize;
 
+/// Returns the permissions and file for a memory page.
 pub struct PageInfo {
+    /// Whether reading from the page is allowed.
     pub read: bool,
+    /// Whether writing the page is allowed.
     pub write: bool,
+    /// Whether executing instructions in the page is allowed.
     pub execute: bool,
+    /// The file associated with the page.
     pub file: Option<String>,
 }
 
@@ -66,7 +71,8 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     page_info
 }
 
-pub fn log(_info: &str) {
+/// Logs `info` to the logging process via TCP.
+pub fn log(info: &str) {
     // TODO: log to file
     // log using a separate process to allow seccomp protections and fault tolerance
     // communicate via socket

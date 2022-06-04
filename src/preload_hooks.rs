@@ -1,4 +1,4 @@
-pub mod libc_start_main;
+mod libc_start_main;
 
 #[cfg(not(disable_format_string_hooks))]
 pub mod format_strings;

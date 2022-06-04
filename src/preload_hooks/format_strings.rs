@@ -5,9 +5,12 @@ use std::{
     mem, panic,
 };
 
+/// The risk level from parsing a format string.
 #[derive(Debug, PartialEq, Eq)]
 enum FormatStringResult {
+    /// No extra mitigations necessary.
     LowRisk,
+    /// Format string is non-constant and should be changed for safety.
     NonConstant,
 }
 
@@ -15,6 +18,7 @@ extern "C" {
     static stdout: *mut FILE;
 }
 
+/// Constant for a `"%s\0"` format string.
 const PERCENT_S: *const c_char = "%s\0".as_ptr() as *const c_char;
 
 /// Hooks `vfprintf`.
