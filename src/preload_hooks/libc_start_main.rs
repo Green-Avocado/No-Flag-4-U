@@ -3,13 +3,13 @@ use libc::{c_char, c_int, SYS_exit_group};
 use std::{arch::asm, mem, panic, sync::atomic::Ordering};
 
 /// Hooks `__libc_start_main`.
-/// 
+///
 /// - Sets `MAIN_STARTED` so other functions can switch to safe mode.
 /// - Consumes 8 arguments in case glibc is compiled with `LIBC_START_MAIN_AUXVEC_ARG`.
 /// - Calls `__libc_start_main` in glibc with the original arguments.
-/// 
+///
 /// # Safety
-/// 
+///
 /// This function should never be called directly.
 /// The function is intended to be called by the linker when a program starts.
 #[no_mangle]
