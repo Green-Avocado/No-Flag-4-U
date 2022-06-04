@@ -1,5 +1,5 @@
 use libc::{c_void, dlsym, RTLD_NEXT};
-use std::{arch::asm, ffi::CString, fs, sync::atomic::AtomicU16};
+use std::{arch::asm, ffi::CString, fs};
 use zeroize::Zeroize;
 
 pub struct PageInfo {
@@ -8,9 +8,6 @@ pub struct PageInfo {
     pub execute: bool,
     pub file: Option<String>,
 }
-
-static LOGGING_PORT: AtomicU16 = AtomicU16::new(0);
-static LOGGING_HOST: AtomicU16 = AtomicU16::new(0);
 
 /*
     Wrapps dlsym() to get the next pointer for a symbol
