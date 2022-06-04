@@ -1,5 +1,7 @@
 # Somewhat Safe Glibc Wrappers
 
+Provides wrappers for some libc functions to mitigate security risks.
+
 ## Features
 
 - Memory is never freed after `__libc_start_main()` to prevent UAF
@@ -47,3 +49,8 @@ Set the `LD_PRELOAD` environment variable (affects child processes):
 export LD_PRELOAD=libsuper_safe_glibc_wrappers.so
 [COMMAND]
 ```
+
+### Logging
+
+A TCP listener must be active to receive logs.
+One is provided in the `log_server` binary.
