@@ -8,4 +8,6 @@ mod utils;
 
 use std::sync::atomic::AtomicBool;
 
+/// Returns `true` if `__libc_start_main` has been run.
+/// Returns `false` otherwise.
 static MAIN_STARTED: AtomicBool = AtomicBool::new(false);

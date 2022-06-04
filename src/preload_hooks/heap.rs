@@ -6,12 +6,11 @@ thread_local! {
     static FREE_RECURSION_GUARD: Cell<bool> = Cell::new(true);
 }
 
-/*
-    Hooks free
-    - FREE_RECURSION_GUARD prevents recursive calls to free
-    - does nothing if __libc_start_main has not been called
-    - performs checks without freeing anything if __libc_start_main has been called
-*/
+/// Hooks `free`.
+/// 
+/// - `FREE_RECURSION_GUARD` prevents recursive calls to `free`.
+/// - Does nothing if `__libc_start_main` has not been called.
+/// - Performs checks without freeing anything if `__libc_start_main` has been called.
 #[no_mangle]
 pub unsafe extern "C" fn free(ptr: *mut c_void) {
     if ptr as usize == 0 {

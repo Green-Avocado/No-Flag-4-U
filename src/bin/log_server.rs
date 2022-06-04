@@ -13,7 +13,7 @@ fn handle_connection(mut stream: TcpStream) {
                 panic!("{}", e);
             }
         }
-        match stream.write(&mut buf) {
+        match stream.write(&buf) {
             Ok(_) => {}
             Err(e) => {
                 panic!("{}", e);

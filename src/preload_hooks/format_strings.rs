@@ -5,7 +5,7 @@ use std::{
     mem, panic,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 enum FormatStringResult {
     LowRisk,
     NonConstant,
@@ -17,11 +17,10 @@ extern "C" {
 
 const PERCENT_S: *const c_char = "%s\0".as_ptr() as *const c_char;
 
-/*
-    Hooks vfprintf
-    - if the format string is non-constant, replace with a safe version
-    - calls vfprintf in glibc with potentially modified arguments to mitigate security risks
-*/
+/// Hooks `vfprintf`.
+/// 
+/// - If the format string is non-constant, replace with a safe version.
+/// - Calls `vfprintf` in glibc with potentially modified arguments to mitigate security risks.
 #[no_mangle]
 pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: VaList) -> c_int {
     match check_format_string(format) {
@@ -38,38 +37,34 @@ pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: 
     }
 }
 
-/*
-    Hooks vprintf
-    - passes call to vfprintf
-*/
+/// Hooks `vprintf`.
+/// 
+/// - Passes call to `vfprintf`.
 #[no_mangle]
 pub unsafe extern "C" fn vprintf(format: *const c_char, ap: VaList) -> c_int {
     vfprintf(stdout, format, ap)
 }
 
-/*
-    Hooks printf
-    - passes call to vfprintf
-*/
+/// Hooks `printf`.
+/// 
+/// - Passes call to `vfprintf`.
 #[no_mangle]
 pub unsafe extern "C" fn fprintf(stream: *mut FILE, format: *const c_char, mut args: ...) -> c_int {
     vfprintf(stream, format, args.as_va_list())
 }
 
-/*
-    Hooks printf
-    - passes call to vprintf
-*/
+/// Hooks `printf`.
+/// 
+/// - Passes call to `vprintf`.
 #[no_mangle]
 pub unsafe extern "C" fn printf(format: *const c_char, mut args: ...) -> c_int {
     vprintf(format, args.as_va_list())
 }
 
-/*
-    Hooks vdprintf
-    - if the format string is non-constant, replace with a safe version
-    - calls vdprintf in glibc with potentially modified arguments to mitigate security risks
-*/
+/// Hooks `vdprintf`.
+/// 
+/// - If the format string is non-constant, replace with a safe version.
+/// - Calls `vdprintf` in glibc with potentially modified arguments to mitigate security risks.
 #[no_mangle]
 pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) -> c_int {
     match check_format_string(format) {
@@ -86,20 +81,18 @@ pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) 
     }
 }
 
-/*
-    Hooks dprintf
-    - passes call to vdprintf
-*/
+/// Hooks `dprintf`.
+/// 
+/// - Passes call to `vdprintf`.
 #[no_mangle]
 pub unsafe extern "C" fn dprintf(fd: c_int, format: *const c_char, mut args: ...) -> c_int {
     vdprintf(fd, format, args.as_va_list())
 }
 
-/*
-    Hooks vsprintf
-    - if the format string is non-constant, replace with a safe version
-    - calls vsprintf in glibc with potentially modified arguments to mitigate security risks
-*/
+/// Hooks `vsprintf`.
+/// 
+/// - If the format string is non-constant, replace with a safe version.
+/// - Calls `vsprintf` in glibc with potentially modified arguments to mitigate security risks.
 #[no_mangle]
 pub unsafe extern "C" fn vsnprintf(
     s: *mut c_char,
@@ -121,10 +114,9 @@ pub unsafe extern "C" fn vsnprintf(
     }
 }
 
-/*
-    Hooks snprintf
-    - passes call to vsnprintf
-*/
+/// Hooks `snprintf`.
+/// 
+/// - Passes call to `vsnprintf`.
 #[no_mangle]
 pub unsafe extern "C" fn snprintf(
     s: *mut c_char,
@@ -135,11 +127,10 @@ pub unsafe extern "C" fn snprintf(
     vsnprintf(s, size, format, args.as_va_list())
 }
 
-/*
-    Hooks vsprintf
-    - if the format string is non-constant, replace with a safe version
-    - calls vsprintf in glibc potentially with modified arguments to mitigate security risks
-*/
+/// Hooks `vsprintf.
+/// 
+/// - If the format string is non-constant, replace with a safe version.
+/// - Calls `vsprintf` in glibc potentially with modified arguments to mitigate security risks.
 #[no_mangle]
 pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaList) -> c_int {
     match check_format_string(format) {
@@ -156,21 +147,19 @@ pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaL
     }
 }
 
-/*
-    Hooks sprintf
-    - passes call to vsprintf
-*/
+/// Hooks `sprintf`.
+/// 
+/// - passes call to `vsprintf`.
 #[no_mangle]
 pub unsafe extern "C" fn sprintf(s: *mut c_char, format: *const c_char, mut args: ...) -> c_int {
     vsprintf(s, format, args.as_va_list())
 }
 
-/*
-    Performs sanity checks on the format string
-    - returns FormatStringResult::LowRisk if everything passes
-    - returns FormatStringResult::NonConstant if non-constant
-    - panics if format string is dangerous
-*/
+/// Performs sanity checks on the format string specified by `format`.
+/// 
+/// - Returns `FormatStringResult::LowRisk` if everything passes.
+/// - Returns `FormatStringResult::NonConstant` if non-constant.
+/// - Panics if format string is dangerous.
 fn check_format_string(format: *const c_char) -> FormatStringResult {
     let page_info =
         utils::get_ptr_info(format as *const c_void).expect("invalid format string pointer");
@@ -203,10 +192,8 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
                     d if d.is_digit(10) => (),
                     _ => directive_in_progress = false,
                 }
-            } else {
-                if c == '%' {
-                    directive_in_progress = true;
-                }
+            } else if c == '%' {
+                directive_in_progress = true;
             }
         }
     }

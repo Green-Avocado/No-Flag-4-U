@@ -9,16 +9,12 @@ pub struct PageInfo {
     pub file: Option<String>,
 }
 
-/*
-    Wrapps dlsym() to get the next pointer for a symbol
-*/
+/// Wraps `dlsym()` to get the next pointer for a symbol.
 pub unsafe fn dlsym_next(symbol: &str) -> *mut c_void {
     dlsym(RTLD_NEXT, CString::new(symbol).unwrap().into_raw())
 }
 
-/*
-    Parses /proc/self/maps to return information about the page a pointer resides in
-*/
+/// Parses `/proc/self/maps` to return information about the page that `ptr` resides in.
 pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     const PARSE_ERR: &str = "failed to parse maps";
     let mut page_info = None;
