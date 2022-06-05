@@ -28,7 +28,7 @@ unsafe extern "C" fn __libc_start_main(
     }
 
     panic::update_hook(move |prev, info| {
-        utils::log(format!("{}", info).as_str());
+        utils::log(format!("{info}").as_str());
         prev(info);
     });
 

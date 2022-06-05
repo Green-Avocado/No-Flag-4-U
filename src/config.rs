@@ -9,6 +9,14 @@ pub struct Config {
     /// The host the log server is running on.
     /// Defaults to `127.0.0.1`
     pub host: String,
+
+    /// Whether to log events.
+    /// Defaults to `true`
+    pub logging: bool,
+
+    /// Directory to store log files.
+    /// Defaults to `./log`
+    pub log_dir: String,
 }
 
 /// Default config options.
@@ -18,6 +26,8 @@ impl Default for Config {
         Config {
             port: 40000,
             host: String::from("127.0.0.1"),
+            logging: true,
+            log_dir: String::from("./log"),
         }
     }
 }
@@ -40,22 +50,40 @@ pub fn read_config() -> Config {
 
     if let Ok(contents) = fs::read_to_string(get_config_path()) {
         for row in contents.lines() {
-            let mut columns = row.split_whitespace();
+            let trimmed = row.trim();
 
-            match columns.next() {
-                Some(col) if col == "PORT" => {
-                    conf.port = columns
-                        .next()
-                        .expect("missing PORT value")
+            // configuration comment
+            if trimmed.starts_with('#') {
+                continue;
+            }
+
+            // empty line
+            if trimmed.is_empty() {
+                continue;
+            }
+
+            let (key, value) = trimmed
+                .split_once(char::is_whitespace)
+                .unwrap_or_else(|| panic!("failed parsing config:\n{row}"));
+
+            match key {
+                "PORT" => {
+                    conf.port = value
                         .parse::<u16>()
-                        .expect("failed parsing port");
+                        .unwrap_or_else(|e| panic!("failed parsing port:\n{row}\n{e}"));
                 }
-                Some(col) if col == "HOST" => {
-                    conf.host = String::from(columns.next().expect("missing HOST string"));
+                "HOST" => {
+                    conf.host = String::from(value);
                 }
-                Some(col) if col.starts_with('#') => (), // comment
-                Some(col) => panic!("unrecognized config option: {}", col), // unrecognized option
-                None => (),                              // empty line
+                "LOGGING" => {
+                    conf.logging = value
+                        .parse::<bool>()
+                        .unwrap_or_else(|e| panic!("failed parsing logging setting:\n{row}\n{e}"));
+                }
+                "LOG_DIR" => {
+                    conf.log_dir = String::from(value);
+                }
+                _ => panic!("unrecognized configuration key: {key}"), // unrecognized option
             }
         }
     }

@@ -33,18 +33,20 @@ static LOG_STREAM_INIT: Once = Once::new();
 pub fn init_log_stream() {
     let conf = config::read_config();
 
-    LOG_STREAM_INIT.call_once(|| {
-        match TcpStream::connect((conf.host, conf.port)) {
-            Ok(stream) =>
-            // SAFETY: LOG_STREAM is only modified once.
-            unsafe { *LOG_STREAM.borrow_mut() = Some(Mutex::new(stream)) },
-            Err(e) => {
-                if cfg!(enable_require_logger) {
-                    panic!("could not connect to logger\n{}", e);
+    if conf.logging {
+        LOG_STREAM_INIT.call_once(|| {
+            match TcpStream::connect((conf.host, conf.port)) {
+                Ok(stream) =>
+                // SAFETY: LOG_STREAM is only modified once.
+                unsafe { *LOG_STREAM.borrow_mut() = Some(Mutex::new(stream)) },
+                Err(e) => {
+                    if cfg!(enable_require_logger) {
+                        panic!("could not connect to logger\n{e}");
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 }
 
 /// Returns a reference to `LOG_STREAM`.
@@ -113,9 +115,9 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
 pub fn log(info: &str) {
     if let Some(stream) = get_log_stream() {
         match stream.lock().unwrap().write(info.as_bytes()) {
-            Ok(_) => {}
+            Ok(_) => (),
             Err(e) => {
-                panic!("{}", e);
+                panic!("{e}");
             }
         }
     }

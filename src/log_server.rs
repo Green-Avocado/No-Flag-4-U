@@ -13,10 +13,11 @@ fn handle_connection(mut stream: TcpStream) {
     let mut buf = Vec::new();
     match stream.read_to_end(&mut buf) {
         Ok(_) => {
-            println!("Received: {}", String::from_utf8_lossy(&buf));
+            let s = String::from_utf8_lossy(&buf);
+            println!("Received: {s}");
         }
         Err(e) => {
-            println!("Error: {}", e);
+            println!("Error: {e}");
         }
     }
 
@@ -27,7 +28,10 @@ fn handle_connection(mut stream: TcpStream) {
 fn main() {
     let conf = config::read_config();
 
-    // TODO: get port form env/config
+    if !conf.logging {
+        panic!("logging is disabled, check  configuration file");
+    }
+
     let listener = TcpListener::bind((Ipv4Addr::new(127, 0, 0, 1), conf.port))
         .expect("failed to bind to port");
 
@@ -46,11 +50,11 @@ fn main() {
                         handle_connection(stream);
                         break;
                     }
-                    _ => {}
+                    _ => (),
                 }
             }
             Err(e) => {
-                println!("Error: {}", e);
+                println!("Error: {e}");
             }
         }
     }
