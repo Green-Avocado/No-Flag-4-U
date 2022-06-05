@@ -6,18 +6,9 @@ extern "C" {
     static stdout: *mut FILE;
 }
 
-/// Passes call to `fputs` in libc.
-///
-/// # Safety
-///
-/// This function should only be called by other hooked `puts` functions.
-unsafe fn fputs_internal(s: *const c_char, stream: *mut FILE) -> c_int {
-    let real_fputs: extern "C" fn(*const c_char, *mut FILE) -> c_int =
-        mem::transmute(utils::dlsym_next("fputs"));
-    real_fputs(s, stream)
-}
-
 /// Hooks `fputs`.
+///
+/// Passes call to `fputs` in libc.
 ///
 /// # Safety
 ///
@@ -39,12 +30,14 @@ pub unsafe extern "C" fn fputs(s: *const c_char, stream: *mut FILE) -> c_int {
         .as_str(),
     );
 
-    fputs_internal(s, stream)
+    let real_fputs: extern "C" fn(*const c_char, *mut FILE) -> c_int =
+        mem::transmute(utils::dlsym_next("fputs"));
+    real_fputs(s, stream)
 }
 
 /// Hooks `puts`.
 ///
-/// - Passes call to `fputs`.
+/// Passes call to `puts` in libc.
 ///
 /// # Safety
 ///
@@ -61,5 +54,7 @@ pub unsafe extern "C" fn puts(s: *const c_char) -> c_int {
         .as_str(),
     );
 
-    fputs_internal(s, stdout)
+    let real_puts: extern "C" fn(*const c_char) -> c_int =
+        mem::transmute(utils::dlsym_next("puts"));
+    real_puts(s)
 }
