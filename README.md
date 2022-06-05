@@ -4,8 +4,9 @@ Provides wrappers for some libc functions to mitigate security risks.
 
 ## Features
 
-- Memory is never freed after `__libc_start_main()` to prevent UAF
-- Safely wraps non-constant format strings for `printf()`
+- Memory is never freed after `__libc_start_main()` to prevent UAF.
+- Safely wraps non-constant format strings for `printf()`.
+- Logs IO to a file using an external process.
 
 ## Build
 
@@ -39,7 +40,7 @@ cargo rustc --release -- --cfg [OPTION]
 Call `ld.so` with the `--preload` flag (only affects the original process):
 
 ```bash
-ld.so --preload libsuper_safe_glibc_wrappers.so [COMMAND]
+ld.so --preload libless_dangerous_libc.so [COMMAND]
 ```
 
 OR
@@ -47,7 +48,7 @@ OR
 Set the `LD_PRELOAD` environment variable (affects child processes):
 
 ```bash
-export LD_PRELOAD=libsuper_safe_glibc_wrappers.so
+export LD_PRELOAD=libless_dangerous_libc.so
 [COMMAND]
 ```
 
@@ -55,3 +56,5 @@ export LD_PRELOAD=libsuper_safe_glibc_wrappers.so
 
 A TCP listener must be active to receive logs.
 One is provided in the `log_server` binary.
+
+### Configuration
