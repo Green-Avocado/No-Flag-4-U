@@ -1,6 +1,7 @@
 use crate::{utils, MAIN_STARTED};
 use libc::{c_char, c_int, SYS_exit_group};
 use std::{arch::asm, mem, panic, sync::atomic::Ordering};
+use whoami;
 
 /// Hooks `__libc_start_main`.
 ///
@@ -32,10 +33,11 @@ unsafe extern "C" fn __libc_start_main(
         prev(info);
     });
 
-    utils::init_log_stream();
-
     MAIN_STARTED.store(true, Ordering::SeqCst);
 
+    utils::init_log_stream();
+
+    utils::log(&(whoami::username() + "\n"));
     utils::log("Main Started\n");
 
     let real_libc_start_main: extern "C" fn(

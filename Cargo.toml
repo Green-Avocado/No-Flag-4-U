@@ -9,6 +9,8 @@ edition = "2021"
 libc = "0.2"
 zeroize = "1.5"
 inline-c = "0.1"
+whoami = "1.2"
+chrono = "0.4"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
