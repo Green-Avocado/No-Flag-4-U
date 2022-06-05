@@ -34,7 +34,12 @@ cargo rustc --release -- --cfg [OPTION]
 | `enable_require_logger`        | panic if unable to connect to the logger                        |
 | `enable_env_config`            | (TODO) allow overriding config options using env vars           |
 | `enable_restrictive_seccomp`   | (TODO) immediately call seccomp to restrict dangerous syscalls  |
-| `disable_fmtstr_hooks`         | do not hook libc functions belonging to the `printf()` family   |
+| `disable_read_hooks`           | do not hook libc functions belonging to the `read` family       |
+| `disable_write_hooks`          | do not hook libc functions belonging to the `write` family      |
+| `disable_gets_hooks`           | do not hook libc functions belonging to the `gets` family       |
+| `disable_puts_hooks`           | do not hook libc functions belonging to the `puts` family       |
+| `disable_scanf_hooks`          | do not hook libc functions belonging to the `scanf` family      |
+| `disable_printf_hooks`         | do not hook libc functions belonging to the `printf` family     |
 | `disable_heap_hooks`           | do not hook libc functions for managing dynamic memory          |
 
 ## Usage

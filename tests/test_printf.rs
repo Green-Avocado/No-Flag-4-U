@@ -1,8 +1,8 @@
-#[cfg(not(disable_fmtstr_hooks))]
+#[cfg(not(disable_printf_hooks))]
 mod tests {
     use inline_c::assert_c;
     use libc::c_char;
-    use no_flag_4_u::preload_hooks::format_strings::printf;
+    use no_flag_4_u::preload_hooks::printf::printf;
     use std::panic;
 
     #[test]
