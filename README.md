@@ -28,11 +28,12 @@ Enable or disable optional features by passing flags to rustc:
 ```
 cargo rustc --release -- --cfg [OPTION]
 ```
-| OPTION | Description |
+| OPTION                         | Description                                                     |
 |--------------------------------|-----------------------------------------------------------------|
 | `enable_n_directive_filter`    | disallow `%n` conversion specifiers in format strings           |
 | `enable_require_logger`        | panic if unable to connect to the logger                        |
-| `enable_env_config`            | allow overriding config options using env vars                  |
+| `enable_env_config`            | (TODO) allow overriding config options using env vars           |
+| `enable_restrictive_seccomp`   | (TODO) immediately call seccomp to restrict dangerous syscalls  |
 | `disable_fmtstr_hooks`         | do not hook libc functions belonging to the `printf()` family   |
 | `disable_heap_hooks`           | do not hook libc functions for managing dynamic memory          |
 
