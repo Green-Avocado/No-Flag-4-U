@@ -9,12 +9,12 @@ mod tests {
             #include <stdio.h>
 
             int main() {
-                printf("Hello, world!\n");
+                printf("Hello, world!");
                 return 0;
             }
         })
         .success()
-        .stdout("Hello, world!\n");
+        .stdout("Hello, world!");
     }
 
     #[test]
