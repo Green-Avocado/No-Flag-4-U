@@ -1,3 +1,5 @@
+mod config;
+
 use libc::fork;
 use std::{
     io::Read,
@@ -23,6 +25,8 @@ fn handle_connection(mut stream: TcpStream) {
 
 /// Binds to port, forks on connections.
 fn main() {
+    config::read_config();
+
     // TODO: get port form env/config
     let port = 1337;
     let listener =

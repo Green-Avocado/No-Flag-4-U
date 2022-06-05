@@ -1,4 +1,4 @@
-use crate::{utils, MAIN_STARTED};
+use crate::{config, utils, MAIN_STARTED};
 use libc::{c_char, c_int, SYS_exit_group};
 use std::{arch::asm, mem, panic, sync::atomic::Ordering};
 
@@ -26,6 +26,8 @@ unsafe extern "C" fn __libc_start_main(
             )
         }));
     }
+
+    config::read_config();
 
     // TODO: check logging env vars/config
     utils::init_log_stream();

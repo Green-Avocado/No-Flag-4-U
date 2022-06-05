@@ -13,6 +13,10 @@ inline-c = "0.1"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "log_server"
+path = "src/log_server.rs"
+
 [profile.release]
 strip = true
 opt-level = "z"

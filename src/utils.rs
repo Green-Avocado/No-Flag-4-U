@@ -5,7 +5,7 @@ use std::{
     ffi::CString,
     fs,
     io::Write,
-    net::TcpStream,
+    net::{Ipv4Addr, TcpStream},
     sync::{Mutex, Once},
 };
 use zeroize::Zeroize;
@@ -30,11 +30,14 @@ static LOG_STREAM_INIT: Once = Once::new();
 
 /// Initializes `LOG_STREAM` once.
 pub fn init_log_stream() {
+    let host = Ipv4Addr::new(127, 0, 0, 1);
+    let port = 1337;
+
     LOG_STREAM_INIT.call_once(|| {
-        match TcpStream::connect("127.0.0.1:1337") {
+        match TcpStream::connect((host, port)) {
             Ok(stream) =>
-                // SAFETY: LOG_STREAM is only modified once.
-                unsafe { *LOG_STREAM.borrow_mut() = Some(Mutex::new(stream)) },
+            // SAFETY: LOG_STREAM is only modified once.
+            unsafe { *LOG_STREAM.borrow_mut() = Some(Mutex::new(stream)) },
             Err(e) => {
                 if cfg!(enable_require_logger) {
                     panic!("could not connect to logger\n{}", e);

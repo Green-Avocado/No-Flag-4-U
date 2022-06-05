@@ -3,6 +3,7 @@
 #![feature(local_key_cell_methods)]
 #![feature(c_variadic)]
 
+mod config;
 pub mod preload_hooks;
 mod utils;
 
