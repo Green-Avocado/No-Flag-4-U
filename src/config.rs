@@ -36,8 +36,8 @@ impl Default for Config {
 fn get_config_path() -> String {
     let mut config_path = PathBuf::new();
     config_path.push("/etc/");
-    config_path.push(env::var("CARGO_PKG_NAME").unwrap());
-    config_path.push(env::var("CARGO_PKG_NAME").unwrap() + ".conf");
+    config_path.push(env!("CARGO_PKG_NAME"));
+    config_path.push("settings.conf");
 
     String::from(config_path.as_path().to_str().unwrap())
 }

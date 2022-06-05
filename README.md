@@ -57,6 +57,10 @@ export LD_PRELOAD=libno_flag_4_u.so
 ### Logging
 
 A TCP listener must be active to receive logs.
-One is provided in the `log_server` binary.
+One is provided in the `log_server` binary, however, a custom program may also be used.
+
+By default, logs are stored relative to the cwd of the `log_server` process.
 
 ### Configuration
+
+The config file is located at `/etc/no-flag-4-u/settings.conf`
