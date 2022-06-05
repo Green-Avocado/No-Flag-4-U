@@ -1,4 +1,4 @@
-# Less Dangerous Libc
+# No Flag 4 U
 
 Provides wrappers for some libc functions to mitigate security risks.
 
@@ -40,7 +40,7 @@ cargo rustc --release -- --cfg [OPTION]
 Call `ld.so` with the `--preload` flag (only affects the original process):
 
 ```bash
-ld.so --preload libless_dangerous_libc.so [COMMAND]
+ld.so --preload libno_flag_4_u.so [COMMAND]
 ```
 
 OR
@@ -48,7 +48,7 @@ OR
 Set the `LD_PRELOAD` environment variable (affects child processes):
 
 ```bash
-export LD_PRELOAD=libless_dangerous_libc.so
+export LD_PRELOAD=libno_flag_4_u.so
 [COMMAND]
 ```
 
