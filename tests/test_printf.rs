@@ -98,7 +98,7 @@ mod tests {
             }
         };
 
-        if cfg!(enable_n_directive_filter) {
+        if cfg!(enable_restrict_n_directive) {
             assertion_simple.failure();
             assertion_complex.failure();
         } else {

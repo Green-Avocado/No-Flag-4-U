@@ -30,7 +30,7 @@ cargo rustc --release -- --cfg [OPTION]
 ```
 | OPTION                         | Description                                                     |
 |--------------------------------|-----------------------------------------------------------------|
-| `enable_n_directive_filter`    | disallow `%n` conversion specifiers in format strings           |
+| `enable_restrict_n_directive`  | disallow `%n` conversion specifiers in format strings           |
 | `enable_require_logger`        | panic if unable to connect to the logger                        |
 | `enable_env_config`            | (TODO) allow overriding config options using env vars           |
 | `enable_restrictive_seccomp`   | (TODO) immediately call seccomp to restrict dangerous syscalls  |
