@@ -1,25 +1,23 @@
 use libc::fork;
 use std::{
-    io::{Read, Write},
+    io::Read,
     net::{Ipv4Addr, TcpListener, TcpStream},
 };
 
 fn handle_connection(mut stream: TcpStream) {
-    loop {
-        let mut buf = [0; 0x100];
-        match stream.read(&mut buf) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("{}", e);
-            }
+    println!("Connection Opened");
+
+    let mut buf = Vec::new();
+    match stream.read_to_end(&mut buf) {
+        Ok(_) => {
+            println!("Received: {}", String::from_utf8_lossy(&buf));
         }
-        match stream.write(&buf) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("{}", e);
-            }
+        Err(e) => {
+            println!("Error: {}", e);
         }
     }
+
+    println!("Connection Closed");
 }
 
 fn main() {

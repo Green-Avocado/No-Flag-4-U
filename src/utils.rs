@@ -1,5 +1,13 @@
 use libc::{c_void, dlsym, RTLD_NEXT};
-use std::{arch::asm, ffi::CString, fs};
+use std::borrow::BorrowMut;
+use std::{
+    arch::asm,
+    ffi::CString,
+    fs,
+    io::Write,
+    net::TcpStream,
+    sync::{Mutex, Once},
+};
 use zeroize::Zeroize;
 
 /// Returns the permissions and file for a memory page.
@@ -12,6 +20,23 @@ pub struct PageInfo {
     pub execute: bool,
     /// The file associated with the page.
     pub file: Option<String>,
+}
+
+static mut LOG_STREAM: Option<Mutex<TcpStream>> = None;
+static LOG_STREAM_INIT: Once = Once::new();
+
+/// Initializes `LOG_STREAM` once.
+pub fn init_log_stream() {
+    LOG_STREAM_INIT.call_once(|| unsafe {
+        *LOG_STREAM.borrow_mut() = Some(Mutex::new(
+            TcpStream::connect("127.0.0.1:1337").expect("could not connect to logger"),
+        ));
+    })
+}
+
+/// Returns a reference to `LOG_STREAM`.
+fn get_log_stream<'a>() -> Option<&'a Mutex<TcpStream>> {
+    unsafe { LOG_STREAM.as_ref() }
 }
 
 /// Wraps `dlsym()` to get the next pointer for a symbol.
@@ -73,9 +98,14 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
 
 /// Logs `info` to the logging process via TCP.
 pub fn log(info: &str) {
-    // TODO: log to file
-    // log using a separate process to allow seccomp protections and fault tolerance
-    // communicate via socket
+    if let Some(stream) = get_log_stream() {
+        match stream.lock().unwrap().write(info.as_bytes()) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("{}", e);
+            }
+        }
+    }
 }
 
 #[cfg(test)]

@@ -27,17 +27,19 @@ unsafe extern "C" fn __libc_start_main(
         }));
     }
 
+    // TODO: check logging env vars
     if true {
-        // TODO: check logging env vars
-        // TODO: instantiate logger
+        utils::init_log_stream();
 
         panic::update_hook(move |prev, info| {
-            // TODO: log panic info
+            utils::log(format!("{}", info).as_str());
             prev(info);
         });
     }
 
     MAIN_STARTED.store(true, Ordering::SeqCst);
+
+    utils::log("Main Started\n");
 
     let real_libc_start_main: extern "C" fn(
         extern "C" fn(c_int, *const *const c_char, *const *const c_char) -> c_int,
