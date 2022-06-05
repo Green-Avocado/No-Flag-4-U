@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["gets",""],["heap",""],["printf",""],["puts",""],["read",""],["scanf",""],["write",""]]});

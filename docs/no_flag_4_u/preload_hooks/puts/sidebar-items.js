@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["fputs","Hooks `fputs`."],["puts","Hooks `puts`."]]});

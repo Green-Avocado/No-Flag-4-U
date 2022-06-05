@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["fwrite","Hooks `fwrite`."],["write","Hooks `write`."]]});
