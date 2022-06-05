@@ -106,11 +106,4 @@ mod tests {
             assertion_complex.success();
         }
     }
-
-    #[test]
-    #[should_panic]
-    fn test_invalid() {
-        _ = panic::take_hook();
-        unsafe { printf(1 as *const c_char) };
-    }
 }

@@ -54,6 +54,15 @@ unsafe fn vfprintf_internal(stream: *mut FILE, format: *const c_char, ap: VaList
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: VaList) -> c_int {
+    utils::log(
+        format!(
+            "vfprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vfprintf_internal(stream, format, ap)
 }
 
@@ -69,6 +78,15 @@ pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: 
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn vprintf(format: *const c_char, ap: VaList) -> c_int {
+    utils::log(
+        format!(
+            "vprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vfprintf_internal(stdout, format, ap)
 }
 
@@ -84,6 +102,15 @@ pub unsafe extern "C" fn vprintf(format: *const c_char, ap: VaList) -> c_int {
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn fprintf(stream: *mut FILE, format: *const c_char, mut args: ...) -> c_int {
+    utils::log(
+        format!(
+            "fprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vfprintf_internal(stream, format, args.as_va_list())
 }
 
@@ -99,6 +126,15 @@ pub unsafe extern "C" fn fprintf(stream: *mut FILE, format: *const c_char, mut a
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn printf(format: *const c_char, mut args: ...) -> c_int {
+    utils::log(
+        format!(
+            "printf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vfprintf_internal(stdout, format, args.as_va_list())
 }
 
@@ -135,6 +171,15 @@ unsafe fn vdprintf_internal(fd: c_int, format: *const c_char, ap: VaList) -> c_i
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) -> c_int {
+    utils::log(
+        format!(
+            "vdprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vdprintf_internal(fd, format, ap)
 }
 
@@ -150,6 +195,15 @@ pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) 
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn dprintf(fd: c_int, format: *const c_char, mut args: ...) -> c_int {
+    utils::log(
+        format!(
+            "dprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vdprintf_internal(fd, format, args.as_va_list())
 }
 
@@ -197,6 +251,15 @@ pub unsafe extern "C" fn vsnprintf(
     format: *const c_char,
     ap: VaList,
 ) -> c_int {
+    utils::log(
+        format!(
+            "vsnprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vsnprintf_internal(s, size, format, ap)
 }
 
@@ -218,6 +281,15 @@ pub unsafe extern "C" fn snprintf(
     format: *const c_char,
     mut args: ...
 ) -> c_int {
+    utils::log(
+        format!(
+            "snprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vsnprintf(s, size, format, args.as_va_list())
 }
 
@@ -259,6 +331,15 @@ pub unsafe extern "C" fn vsprintf_internal(
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaList) -> c_int {
+    utils::log(
+        format!(
+            "vsprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vsprintf_internal(s, format, ap)
 }
 
@@ -275,6 +356,15 @@ pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaL
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn sprintf(s: *mut c_char, format: *const c_char, mut args: ...) -> c_int {
+    utils::log(
+        format!(
+            "sprintf(format=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(format)
+                .to_str()
+                .expect("invalid format string"),
+        )
+        .as_str(),
+    );
     vsprintf(s, format, args.as_va_list())
 }
 
