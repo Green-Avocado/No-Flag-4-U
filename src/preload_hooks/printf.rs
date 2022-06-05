@@ -21,19 +21,13 @@ extern "C" {
 /// Constant for a `"%s\0"` format string.
 const PERCENT_S: *const c_char = "%s\0".as_ptr() as *const c_char;
 
-/// Hooks `vfprintf`.
-///
-/// - If the format string is non-constant, replace with a safe version.
-/// - Calls `vfprintf` in glibc with potentially modified arguments to mitigate security risks.
+/// If the format string is non-constant, replace with a safe version.
+/// Calls `vfprintf` in glibc with potentially modified arguments to mitigate security risks.
 ///
 /// # Safety
 ///
-/// Do not allow arbitrary format strings.
-/// Ensure that the arguments agree with the format string directives.
-///
-/// See `man "printf(3)"` for more details.
-#[no_mangle]
-pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: VaList) -> c_int {
+/// This function should only be called by other hooked `printf` functions.
+unsafe fn vfprintf_internal(stream: *mut FILE, format: *const c_char, ap: VaList) -> c_int {
     match check_format_string(format) {
         FormatStringResult::LowRisk => {
             let real_vfprintf: extern "C" fn(*mut FILE, *const c_char, VaList) -> c_int =
@@ -48,9 +42,24 @@ pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: 
     }
 }
 
+/// Hooks `vfprintf`.
+///
+/// Passes call to `vfprintf_internal`.
+///
+/// # Safety
+///
+/// Do not allow arbitrary format strings.
+/// Ensure that the arguments agree with the format string directives.
+///
+/// See `man "printf(3)"` for more details.
+#[no_mangle]
+pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: VaList) -> c_int {
+    vfprintf_internal(stream, format, ap)
+}
+
 /// Hooks `vprintf`.
 ///
-/// - Passes call to `vfprintf`.
+/// Passes call to `vfprintf_internal`.
 ///
 /// # Safety
 ///
@@ -60,12 +69,12 @@ pub unsafe extern "C" fn vfprintf(stream: *mut FILE, format: *const c_char, ap: 
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn vprintf(format: *const c_char, ap: VaList) -> c_int {
-    vfprintf(stdout, format, ap)
+    vfprintf_internal(stdout, format, ap)
 }
 
 /// Hooks `printf`.
 ///
-/// - Passes call to `vfprintf`.
+/// Passes call to `vfprintf_internal`.
 ///
 /// # Safety
 ///
@@ -75,12 +84,12 @@ pub unsafe extern "C" fn vprintf(format: *const c_char, ap: VaList) -> c_int {
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn fprintf(stream: *mut FILE, format: *const c_char, mut args: ...) -> c_int {
-    vfprintf(stream, format, args.as_va_list())
+    vfprintf_internal(stream, format, args.as_va_list())
 }
 
 /// Hooks `printf`.
 ///
-/// - Passes call to `vprintf`.
+/// Passes call to `vprintf_internal`.
 ///
 /// # Safety
 ///
@@ -90,22 +99,16 @@ pub unsafe extern "C" fn fprintf(stream: *mut FILE, format: *const c_char, mut a
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn printf(format: *const c_char, mut args: ...) -> c_int {
-    vprintf(format, args.as_va_list())
+    vfprintf_internal(stdout, format, args.as_va_list())
 }
 
-/// Hooks `vdprintf`.
-///
-/// - If the format string is non-constant, replace with a safe version.
-/// - Calls `vdprintf` in glibc with potentially modified arguments to mitigate security risks.
+/// If the format string is non-constant, replace with a safe version.
+/// Calls `vdprintf` in glibc with potentially modified arguments to mitigate security risks.
 ///
 /// # Safety
 ///
-/// Do not allow arbitrary format strings.
-/// Ensure that the arguments agree with the format string directives.
-///
-/// See `man "printf(3)"` for more details.
-#[no_mangle]
-pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) -> c_int {
+/// This function should only be called by other hooked `dprintf` functions.
+unsafe fn vdprintf_internal(fd: c_int, format: *const c_char, ap: VaList) -> c_int {
     match check_format_string(format) {
         FormatStringResult::LowRisk => {
             let real_vdprintf: extern "C" fn(c_int, *const c_char, VaList) -> c_int =
@@ -120,9 +123,24 @@ pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) 
     }
 }
 
+/// Hooks `vdprintf`.
+///
+/// Passes call to `vdprintf_internal`.
+///
+/// # Safety
+///
+/// Do not allow arbitrary format strings.
+/// Ensure that the arguments agree with the format string directives.
+///
+/// See `man "printf(3)"` for more details.
+#[no_mangle]
+pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) -> c_int {
+    vdprintf_internal(fd, format, ap)
+}
+
 /// Hooks `dprintf`.
 ///
-/// - Passes call to `vdprintf`.
+/// Passes call to `vdprintf_internal`.
 ///
 /// # Safety
 ///
@@ -132,23 +150,16 @@ pub unsafe extern "C" fn vdprintf(fd: c_int, format: *const c_char, ap: VaList) 
 /// See `man "printf(3)"` for more details.
 #[no_mangle]
 pub unsafe extern "C" fn dprintf(fd: c_int, format: *const c_char, mut args: ...) -> c_int {
-    vdprintf(fd, format, args.as_va_list())
+    vdprintf_internal(fd, format, args.as_va_list())
 }
 
-/// Hooks `vsprintf`.
-///
-/// - If the format string is non-constant, replace with a safe version.
-/// - Calls `vsprintf` in glibc with potentially modified arguments to mitigate security risks.
+/// If the format string is non-constant, replace with a safe version.
+/// Calls `vsprintf` in glibc with potentially modified arguments to mitigate security risks.
 ///
 /// # Safety
 ///
-/// Do not allow arbitrary format strings.
-/// Ensure that the arguments agree with the format string directives.
-/// Ensure that `size` is less than the size of the buffer.
-///
-/// See `man "printf(3)"` for more details.
-#[no_mangle]
-pub unsafe extern "C" fn vsnprintf(
+/// This function should only be called by other hooked `snprintf` functions.
+unsafe fn vsnprintf_internal(
     s: *mut c_char,
     size: size_t,
     format: *const c_char,
@@ -168,9 +179,30 @@ pub unsafe extern "C" fn vsnprintf(
     }
 }
 
+/// Hooks `vsnprintf`.
+///
+/// Passes call to `vsnprintf_internal`.
+///
+/// # Safety
+///
+/// Do not allow arbitrary format strings.
+/// Ensure that the arguments agree with the format string directives.
+/// Ensure that `size` is less than the size of the buffer.
+///
+/// See `man "printf(3)"` for more details.
+#[no_mangle]
+pub unsafe extern "C" fn vsnprintf(
+    s: *mut c_char,
+    size: size_t,
+    format: *const c_char,
+    ap: VaList,
+) -> c_int {
+    vsnprintf_internal(s, size, format, ap)
+}
+
 /// Hooks `snprintf`.
 ///
-/// - Passes call to `vsnprintf`.
+/// Passes call to `vsnprintf_internal`.
 ///
 /// # Safety
 ///
@@ -189,20 +221,17 @@ pub unsafe extern "C" fn snprintf(
     vsnprintf(s, size, format, args.as_va_list())
 }
 
-/// Hooks `vsprintf.
-///
-/// - If the format string is non-constant, replace with a safe version.
-/// - Calls `vsprintf` in glibc potentially with modified arguments to mitigate security risks.
+/// If the format string is non-constant, replace with a safe version.
+/// Calls `vsprintf` in glibc potentially with modified arguments to mitigate security risks.
 ///
 /// # Safety
 ///
-/// Do not allow arbitrary format strings.
-/// Ensure that the arguments agree with the format string directives.
-/// Ensure that the length of the output will never exceed the size of the buffer.
-///
-/// See `man "printf(3)"` for more details.
-#[no_mangle]
-pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaList) -> c_int {
+/// This function should only be called by other hooked `sprintf` functions.
+pub unsafe extern "C" fn vsprintf_internal(
+    s: *mut c_char,
+    format: *const c_char,
+    ap: VaList,
+) -> c_int {
     match check_format_string(format) {
         FormatStringResult::LowRisk => {
             let real_vsprintf: extern "C" fn(*mut c_char, *const c_char, VaList) -> c_int =
@@ -217,9 +246,25 @@ pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaL
     }
 }
 
+/// Hooks `vsprintf.
+///
+/// passes call to `vsprintf_internal`.
+///
+/// # Safety
+///
+/// Do not allow arbitrary format strings.
+/// Ensure that the arguments agree with the format string directives.
+/// Ensure that the length of the output will never exceed the size of the buffer.
+///
+/// See `man "printf(3)"` for more details.
+#[no_mangle]
+pub unsafe extern "C" fn vsprintf(s: *mut c_char, format: *const c_char, ap: VaList) -> c_int {
+    vsprintf_internal(s, format, ap)
+}
+
 /// Hooks `sprintf`.
 ///
-/// - passes call to `vsprintf`.
+/// passes call to `vsprintf_internal`.
 ///
 /// # Safety
 ///
