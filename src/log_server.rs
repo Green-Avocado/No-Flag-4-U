@@ -1,43 +1,43 @@
 mod config;
 
+use chrono::Local;
 use libc::fork;
+use rand::random;
 use std::{
     fs::{create_dir_all, OpenOptions},
     io::{Read, Write},
     net::{Ipv4Addr, TcpListener, TcpStream},
     path::PathBuf,
 };
-use chrono::Local;
 
 /// Receives data from a TCP Stream.
+/// Logs data to a file.
 fn handle_connection(mut stream: TcpStream, conf: config::Config) {
-    println!("Connection Opened");
-
-    let start_time = Local::now();
+    let timestamp = Local::now().to_rfc3339();
 
     let mut buf = Vec::new();
-    match stream.read_to_end(&mut buf) {
-        Ok(_) => {
-            let s = String::from_utf8_lossy(&buf);
-            println!("Received:\n{s}");
-        }
-        Err(e) => {
-            println!("Error:\n{e}");
-        }
-    }
+    let len = stream
+        .read_to_end(&mut buf)
+        .unwrap_or_else(|e| panic!("Error: {e}"));
 
     let s = String::from_utf8_lossy(&buf);
     let username = s.lines().next().expect("failed to get username");
+    println!("Received {len} bytes from {username} at {timestamp}");
 
     let mut log_path = PathBuf::from(conf.log_dir);
     log_path.push(username);
     create_dir_all(&log_path).expect("failed to create log directory");
 
-    log_path.push(start_time.to_rfc3339());
-    let mut log_file = OpenOptions::new().write(true).create_new(true).open(log_path).expect("failed to create log file");
-    log_file.write(&buf).expect("failed to write log data");
-
-    println!("Connection Closed");
+    log_path.push(format!(
+        "{timestamp}#{discriminator}",
+        discriminator = random::<u16>()
+    ));
+    let mut log_file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(log_path)
+        .expect("failed to create log file");
+    log_file.write_all(&buf).expect("failed to write log data");
 }
 
 /// Binds to port, forks on connections.

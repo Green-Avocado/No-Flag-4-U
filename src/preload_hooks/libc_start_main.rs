@@ -29,7 +29,7 @@ unsafe extern "C" fn __libc_start_main(
     }
 
     panic::update_hook(move |prev, info| {
-        utils::log(format!("{info}").as_str());
+        utils::log(format!("{info}\n").as_str());
         prev(info);
     });
 
@@ -37,7 +37,7 @@ unsafe extern "C" fn __libc_start_main(
 
     utils::init_log_stream();
 
-    utils::log(&(whoami::username() + "\n"));
+    utils::log(format!("{username}\n", username = whoami::username()).as_str());
     utils::log("Main Started\n");
 
     let real_libc_start_main: extern "C" fn(
