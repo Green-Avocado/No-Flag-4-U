@@ -27,15 +27,13 @@ unsafe extern "C" fn __libc_start_main(
         }));
     }
 
-    // TODO: check logging env vars
-    if true {
-        utils::init_log_stream();
+    // TODO: check logging env vars/config
+    utils::init_log_stream();
 
-        panic::update_hook(move |prev, info| {
-            utils::log(format!("{}", info).as_str());
-            prev(info);
-        });
-    }
+    panic::update_hook(move |prev, info| {
+        utils::log(format!("{}", info).as_str());
+        prev(info);
+    });
 
     MAIN_STARTED.store(true, Ordering::SeqCst);
 

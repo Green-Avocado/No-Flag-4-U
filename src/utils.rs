@@ -22,7 +22,10 @@ pub struct PageInfo {
     pub file: Option<String>,
 }
 
+/// A TCP stream to logging server.
 static mut LOG_STREAM: Option<Mutex<TcpStream>> = None;
+
+/// Ensures that `LOG_STREAM` is only initialized once.
 static LOG_STREAM_INIT: Once = Once::new();
 
 /// Initializes `LOG_STREAM` once.

@@ -4,6 +4,7 @@ use std::{
     net::{Ipv4Addr, TcpListener, TcpStream},
 };
 
+/// Receives data from a TCP Stream.
 fn handle_connection(mut stream: TcpStream) {
     println!("Connection Opened");
 
@@ -20,6 +21,7 @@ fn handle_connection(mut stream: TcpStream) {
     println!("Connection Closed");
 }
 
+/// Binds to port, forks on connections.
 fn main() {
     // TODO: get port form env/config
     let port = 1337;
