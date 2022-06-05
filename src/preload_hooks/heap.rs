@@ -34,7 +34,7 @@ pub unsafe extern "C" fn free(ptr: *mut c_void) {
             panic!("freeing invalid permissions");
         }
 
-        if page_info.file == Some("[stack]".to_string()) {
+        if page_info.file == Some(String::from("[stack]")) {
             panic!("freeing in stack");
         }
     }

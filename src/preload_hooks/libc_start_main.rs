@@ -1,4 +1,4 @@
-use crate::{config, utils, MAIN_STARTED};
+use crate::{utils, MAIN_STARTED};
 use libc::{c_char, c_int, SYS_exit_group};
 use std::{arch::asm, mem, panic, sync::atomic::Ordering};
 
@@ -27,15 +27,12 @@ unsafe extern "C" fn __libc_start_main(
         }));
     }
 
-    config::read_config();
-
-    // TODO: check logging env vars/config
-    utils::init_log_stream();
-
     panic::update_hook(move |prev, info| {
         utils::log(format!("{}", info).as_str());
         prev(info);
     });
+
+    utils::init_log_stream();
 
     MAIN_STARTED.store(true, Ordering::SeqCst);
 

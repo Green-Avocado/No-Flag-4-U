@@ -25,12 +25,11 @@ fn handle_connection(mut stream: TcpStream) {
 
 /// Binds to port, forks on connections.
 fn main() {
-    config::read_config();
+    let conf = config::read_config();
 
     // TODO: get port form env/config
-    let port = 1337;
-    let listener =
-        TcpListener::bind((Ipv4Addr::new(127, 0, 0, 1), port)).expect("failed to bind to port");
+    let listener = TcpListener::bind((Ipv4Addr::new(127, 0, 0, 1), conf.port))
+        .expect("failed to bind to port");
 
     for connection in listener.incoming() {
         match connection {

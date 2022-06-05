@@ -1,3 +1,4 @@
+use crate::config;
 use libc::{c_void, dlsym, RTLD_NEXT};
 use std::borrow::BorrowMut;
 use std::{
@@ -5,7 +6,7 @@ use std::{
     ffi::CString,
     fs,
     io::Write,
-    net::{Ipv4Addr, TcpStream},
+    net::TcpStream,
     sync::{Mutex, Once},
 };
 use zeroize::Zeroize;
@@ -30,11 +31,10 @@ static LOG_STREAM_INIT: Once = Once::new();
 
 /// Initializes `LOG_STREAM` once.
 pub fn init_log_stream() {
-    let host = Ipv4Addr::new(127, 0, 0, 1);
-    let port = 1337;
+    let conf = config::read_config();
 
     LOG_STREAM_INIT.call_once(|| {
-        match TcpStream::connect((host, port)) {
+        match TcpStream::connect((conf.host, conf.port)) {
             Ok(stream) =>
             // SAFETY: LOG_STREAM is only modified once.
             unsafe { *LOG_STREAM.borrow_mut() = Some(Mutex::new(stream)) },
@@ -91,7 +91,7 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
                 asm!("mov {}, rsp", out(reg) rsp);
             }
 
-            if file == Some("[stack]".to_string()) && rsp > ptr as usize {
+            if file == Some(String::from("[stack]")) && rsp > ptr as usize {
                 panic!("dangling stack pointer");
             }
 

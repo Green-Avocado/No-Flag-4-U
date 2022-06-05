@@ -246,8 +246,8 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
         panic!("invalid format string permissions");
     }
 
-    if page_info.file == Some("[stack]".to_string())
-        || page_info.file == Some("[heap]".to_string())
+    if page_info.file == Some(String::from("[stack]"))
+        || page_info.file == Some(String::from("[heap]"))
         || page_info.write
     {
         return FormatStringResult::NonConstant;
