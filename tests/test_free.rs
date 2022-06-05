@@ -3,7 +3,7 @@ mod tests {
     use inline_c::assert_c;
     use libc::c_void;
     use no_flag_4_u::preload_hooks::heap::free;
-    use std::env::{remove_var, set_var};
+
     use std::panic;
 
     #[test]
@@ -38,8 +38,6 @@ mod tests {
 
     #[test]
     fn test_stack() {
-        set_var("INLINE_C_RS_CFLAGS", "-Wno-error=free-nonheap-object");
-
         (assert_c! {
             #include <stdio.h>
             #include <stdlib.h>
@@ -54,14 +52,10 @@ mod tests {
             }
         })
         .failure();
-
-        remove_var("INLINE_C_RS_CFLAGS");
     }
 
     #[test]
     fn test_executable() {
-        set_var("INLINE_C_RS_CFLAGS", "-Wno-error=free-nonheap-object");
-
         (assert_c! {
             #include <stdio.h>
             #include <stdlib.h>
@@ -73,7 +67,5 @@ mod tests {
             }
         })
         .failure();
-
-        remove_var("INLINE_C_RS_CFLAGS");
     }
 }
