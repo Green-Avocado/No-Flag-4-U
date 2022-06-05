@@ -2,7 +2,7 @@
 mod tests {
     use inline_c::assert_c;
     use libc::c_void;
-    use somewhat_safe_glibc_wrappers::preload_hooks::heap::free;
+    use less_dangerous_libc::preload_hooks::heap::free;
     use std::env::{remove_var, set_var};
     use std::panic;
 

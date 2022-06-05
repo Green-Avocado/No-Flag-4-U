@@ -1,4 +1,4 @@
-# Somewhat Safe Glibc Wrappers
+# Less Dangerous Libc
 
 Provides wrappers for some libc functions to mitigate security risks.
 
@@ -30,6 +30,7 @@ cargo rustc --release -- --cfg [OPTION]
 | OPTION | Description |
 |--------------------------------|-----------------------------------------------------------------|
 | `enable_n_directive_filter`    | disallow `%n` conversion specifiers in format strings           |
+| `enable_require_logger`        | panic if unable to connect to the logger                        |
 | `disable_format_string_hooks`  | do not hook libc functions belonging to the `printf()` family   |
 | `disable_heap_hooks`           | do not hook libc functions for managing dynamic memory          |
 

@@ -2,7 +2,7 @@
 mod tests {
     use inline_c::assert_c;
     use libc::c_char;
-    use somewhat_safe_glibc_wrappers::preload_hooks::format_strings::printf;
+    use less_dangerous_libc::preload_hooks::format_strings::printf;
     use std::panic;
 
     #[test]
