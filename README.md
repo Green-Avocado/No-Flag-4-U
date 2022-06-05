@@ -32,7 +32,8 @@ cargo rustc --release -- --cfg [OPTION]
 |--------------------------------|-----------------------------------------------------------------|
 | `enable_n_directive_filter`    | disallow `%n` conversion specifiers in format strings           |
 | `enable_require_logger`        | panic if unable to connect to the logger                        |
-| `disable_format_string_hooks`  | do not hook libc functions belonging to the `printf()` family   |
+| `enable_env_config`            | allow overriding config options using env vars                  |
+| `disable_fmtstr_hooks`         | do not hook libc functions belonging to the `printf()` family   |
 | `disable_heap_hooks`           | do not hook libc functions for managing dynamic memory          |
 
 ## Usage

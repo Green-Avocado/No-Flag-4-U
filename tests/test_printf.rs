@@ -1,4 +1,4 @@
-#[cfg(not(disable_format_string_hooks))]
+#[cfg(not(disable_fmtstr_hooks))]
 mod tests {
     use inline_c::assert_c;
     use libc::c_char;
