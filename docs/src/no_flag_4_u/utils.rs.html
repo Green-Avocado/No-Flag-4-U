@@ -164,12 +164,6 @@
 <span id="157">157</span>
 <span id="158">158</span>
 <span id="159">159</span>
-<span id="160">160</span>
-<span id="161">161</span>
-<span id="162">162</span>
-<span id="163">163</span>
-<span id="164">164</span>
-<span id="165">165</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config</span>;
 <span class="kw">use</span> <span class="ident">libc</span>::{<span class="ident">c_void</span>, <span class="ident">dlsym</span>, <span class="ident">RTLD_NEXT</span>};
 <span class="kw">use</span> <span class="ident">std::borrow::BorrowMut</span>;
@@ -207,15 +201,9 @@
 
     <span class="kw">if</span> <span class="ident">conf</span>.<span class="ident">logging</span> {
         <span class="ident">LOG_STREAM_INIT</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="kw">match</span> <span class="ident">TcpStream::connect</span>((<span class="ident">conf</span>.<span class="ident">host</span>, <span class="ident">conf</span>.<span class="ident">port</span>)) {
-                <span class="prelude-val">Ok</span>(<span class="ident">stream</span>) =&gt;
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">stream</span>) <span class="op">=</span> <span class="ident">TcpStream::connect</span>((<span class="ident">conf</span>.<span class="ident">host</span>, <span class="ident">conf</span>.<span class="ident">port</span>)) {
                 <span class="comment">// SAFETY: LOG_STREAM is only modified once.</span>
-                <span class="kw">unsafe</span> { <span class="kw-2">*</span><span class="ident">LOG_STREAM</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Mutex::new</span>(<span class="ident">stream</span>)) },
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                    <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">enable_require_logger</span>) {
-                        <span class="macro">panic!</span>(<span class="string">&quot;could not connect to logger\n{e}&quot;</span>);
-                    }
-                }
+                <span class="kw">unsafe</span> { <span class="kw-2">*</span><span class="ident">LOG_STREAM</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Mutex::new</span>(<span class="ident">stream</span>)) }
             }
         });
     }

@@ -35,15 +35,9 @@ pub fn init_log_stream() {
 
     if conf.logging {
         LOG_STREAM_INIT.call_once(|| {
-            match TcpStream::connect((conf.host, conf.port)) {
-                Ok(stream) =>
+            if let Ok(stream) = TcpStream::connect((conf.host, conf.port)) {
                 // SAFETY: LOG_STREAM is only modified once.
-                unsafe { *LOG_STREAM.borrow_mut() = Some(Mutex::new(stream)) },
-                Err(e) => {
-                    if cfg!(enable_require_logger) {
-                        panic!("could not connect to logger\n{e}");
-                    }
-                }
+                unsafe { *LOG_STREAM.borrow_mut() = Some(Mutex::new(stream)) }
             }
         });
     }
