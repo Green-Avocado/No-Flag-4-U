@@ -16,7 +16,7 @@ Provides wrappers for some libc functions to mitigate security risks.
 - puts (WIP)
 - scanf (TODO)
 - printf
-- heap (WIP)
+- heap
 
 ## Build
 
