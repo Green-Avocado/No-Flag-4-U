@@ -13,7 +13,7 @@ Provides wrappers for some libc functions to mitigate security risks.
 - read (TODO)
 - write
 - gets (TODO)
-- puts (WIP)
+- puts
 - scanf (TODO)
 - printf
 - heap
