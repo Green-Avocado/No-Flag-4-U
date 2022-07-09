@@ -11,7 +11,7 @@ Provides wrappers for some libc functions to mitigate security risks.
 
 ### Wrappers
 
-- read (TODO)
+- read (WIP)
 - write
 - gets (WIP)
 - puts
