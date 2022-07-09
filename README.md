@@ -78,4 +78,4 @@ By default, logs are stored relative to the cwd of the `log_server` process.
 
 ### Configuration
 
-The config file is located at `/etc/no-flag-4-u/settings.conf` (WIP)
+The config file is located at `/etc/no-flag-4-u/settings.conf` (TODO)
