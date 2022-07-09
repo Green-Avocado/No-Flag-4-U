@@ -19,9 +19,10 @@ pub unsafe extern "C" fn write(fd: c_int, buf: *const c_void, count: size_t) -> 
                 "write(fd={fd}, buf=&\"{ptr_contents}\", count={count}\n",
                 ptr_contents = if fd == 1 {
                     String::from_utf8(slice::from_raw_parts::<u8>(buf as *const u8, count).to_vec())
-                        .expect("invalid string passed to fputs")
+                        .expect("invalid string passed to write")
                 } else {
-                    String::from_utf8_lossy(slice::from_raw_parts::<u8>(buf as *const u8, count)).to_string()
+                    String::from_utf8_lossy(slice::from_raw_parts::<u8>(buf as *const u8, count))
+                        .to_string()
                 },
             )
             .as_str(),
@@ -54,18 +55,31 @@ pub unsafe extern "C" fn fwrite(
     n_items: size_t,
     stream: *mut FILE,
 ) -> size_t {
-    utils::log(
-        format!(
-        "fwrite(ptr=&[{ptr_contents:x?}], size={size}, n_items={n_items}), stream={stream_fmt}\n",
-        ptr_contents = slice::from_raw_parts::<u8>(ptr as *const u8, size * n_items),
-        stream_fmt = if stream == stdout {
-            "stdout"
-        } else {
-            "unknown"
-        }
-    )
-        .as_str(),
-    );
+    if stream == stdout && size == 1 {
+        utils::log(
+            format!(
+                "fwrite(ptr=&\"{ptr_contents}\", size=1, n_items={n_items}), stream=stdout\n",
+                ptr_contents = String::from_utf8(
+                    slice::from_raw_parts::<u8>(ptr as *const u8, n_items).to_vec()
+                )
+                .expect("invalid string passed to fwrite")
+            )
+            .as_str(),
+        );
+    } else {
+        utils::log(
+            format!(
+            "fwrite(ptr=&[{ptr_contents:x?}], size={size}, n_items={n_items}), stream={stream_fmt}\n",
+            ptr_contents = slice::from_raw_parts::<u8>(ptr as *const u8, size * n_items),
+            stream_fmt = if stream == stdout {
+                "stdout"
+            } else {
+                "unknown"
+            }
+        )
+            .as_str(),
+        );
+    }
 
     let real_fwrite: extern "C" fn(*const c_void, size_t, size_t, *mut FILE) -> size_t =
         mem::transmute(utils::dlsym_next("fwrite"));
