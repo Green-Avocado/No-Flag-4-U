@@ -10,7 +10,7 @@ extern "C" {
 ///
 /// # Safety
 ///
-/// Ensure that `buf` has enough capacity to fit `count` bytes.
+/// Ensure that `buf` is at most `count` bytes.
 #[no_mangle]
 pub unsafe extern "C" fn write(fd: c_int, buf: *const c_void, count: size_t) -> ssize_t {
     if fd == 1 {
@@ -47,7 +47,7 @@ pub unsafe extern "C" fn write(fd: c_int, buf: *const c_void, count: size_t) -> 
 ///
 /// # Safety
 ///
-/// Ensure that `ptr` has enough capacity to fit `n_items` of size `size`.
+/// Ensure that `ptr` has at most `n_items` of size `size`.
 #[no_mangle]
 pub unsafe extern "C" fn fwrite(
     ptr: *const c_void,
