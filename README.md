@@ -7,6 +7,7 @@ Provides wrappers for some libc functions to mitigate security risks.
 - Memory is never freed after `__libc_start_main()` to prevent UAF.
 - Safely wraps non-constant format strings.
 - Panics on invalid UTF-8 strings in stdin or stdout.
+- Stack buffer overflow protections.
 - Logs IO to a file using an external process.
 
 ### Wrappers

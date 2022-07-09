@@ -65,6 +65,18 @@
 <span id="58">58</span>
 <span id="59">59</span>
 <span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
 <span class="kw">use</span> <span class="ident">libc</span>::{<span class="ident">c_char</span>, <span class="ident">c_int</span>, <span class="ident">FILE</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi::CStr</span>, <span class="ident">mem</span>};
@@ -82,6 +94,8 @@
 <span class="doccomment">/// Ensure that a valid string is read and the length is smaller than the size of the buffer.</span>
 <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">gets</span>(<span class="ident">s</span>: <span class="kw-2">*mut</span> <span class="ident">c_char</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">c_char</span> {
+    <span class="kw">let</span> (<span class="ident">canary_addr</span>, <span class="ident">canary_value</span>) <span class="op">=</span> <span class="ident">utils::get_bof_indicator</span>(<span class="ident">s</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">usize</span>);
+
     <span class="kw">let</span> <span class="ident">real_gets</span>: <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="kw-2">*mut</span> <span class="ident">c_char</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">c_char</span> <span class="op">=</span>
         <span class="ident">mem::transmute</span>(<span class="ident">utils::dlsym_next</span>(<span class="string">&quot;gets&quot;</span>));
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">real_gets</span>(<span class="ident">s</span>);
@@ -96,6 +110,10 @@
         .<span class="ident">as_str</span>(),
     );
 
+    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">canary_addr</span> <span class="op">!</span><span class="op">=</span> <span class="ident">canary_value</span> {
+        <span class="macro">panic!</span>(<span class="string">&quot;buffer overflow&quot;</span>);
+    }
+
     <span class="ident">result</span>
 }
 
@@ -108,6 +126,8 @@
 <span class="doccomment">/// Ensure that a valid string is read and that `n` is smaller than the size of the buffer.</span>
 <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">fgets</span>(<span class="ident">s</span>: <span class="kw-2">*mut</span> <span class="ident">c_char</span>, <span class="ident">n</span>: <span class="ident">c_int</span>, <span class="ident">stream</span>: <span class="kw-2">*mut</span> <span class="ident">FILE</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">c_char</span> {
+    <span class="kw">let</span> (<span class="ident">canary_addr</span>, <span class="ident">canary_value</span>) <span class="op">=</span> <span class="ident">utils::get_bof_indicator</span>(<span class="ident">s</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">usize</span>);
+
     <span class="kw">let</span> <span class="ident">real_fgets</span>: <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="kw-2">*mut</span> <span class="ident">c_char</span>, <span class="ident">c_int</span>, <span class="kw-2">*mut</span> <span class="ident">FILE</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">c_char</span> <span class="op">=</span>
         <span class="ident">mem::transmute</span>(<span class="ident">utils::dlsym_next</span>(<span class="string">&quot;fgets&quot;</span>));
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">real_fgets</span>(<span class="ident">s</span>, <span class="ident">n</span>, <span class="ident">stream</span>);
@@ -122,6 +142,10 @@
         )
         .<span class="ident">as_str</span>(),
     );
+
+    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">canary_addr</span> <span class="op">!</span><span class="op">=</span> <span class="ident">canary_value</span> {
+        <span class="macro">panic!</span>(<span class="string">&quot;buffer overflow&quot;</span>);
+    }
 
     <span class="ident">result</span>
 }
