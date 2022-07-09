@@ -1,7 +1,6 @@
 use crate::{utils, MAIN_STARTED};
 use libc::{c_char, c_int, exit};
 use std::{mem, panic, sync::atomic::Ordering};
-use whoami;
 
 /// Hooks `__libc_start_main`.
 ///

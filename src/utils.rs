@@ -92,7 +92,7 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
                     asm!("mov {}, rsp", out(reg) sp);
                 }
             }
-            
+
             #[cfg(target_arch = "x86")]
             {
                 unsafe {
@@ -164,7 +164,7 @@ mod tests {
                 asm!("mov {}, rsp", out(reg) sp);
             }
         }
-        
+
         #[cfg(target_arch = "x86")]
         {
             unsafe {
