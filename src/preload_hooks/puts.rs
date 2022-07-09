@@ -17,7 +17,7 @@ extern "C" {
 pub unsafe extern "C" fn fputs(s: *const c_char, stream: *mut FILE) -> c_int {
     utils::log(
         format!(
-            "fputs(s=&\"{ptr_contents}, stream={stream_fmt}\")\n",
+            "fputs(s=&\"{ptr_contents}\", stream={stream_fmt})\n",
             ptr_contents = CStr::from_ptr(s)
                 .to_str()
                 .expect("invalid string passed to fputs"),

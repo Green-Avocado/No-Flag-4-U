@@ -13,14 +13,29 @@ extern "C" {
 /// Ensure that `buf` has enough capacity to fit `count` bytes.
 #[no_mangle]
 pub unsafe extern "C" fn write(fd: c_int, buf: *const c_void, count: size_t) -> ssize_t {
-    utils::log(
-        format!(
-            "fwrite(fd={fd}, buf=&\"{ptr_contents}\", count={count}\n",
-            ptr_contents =
-                String::from_utf8_lossy(slice::from_raw_parts::<u8>(buf as *const u8, count)),
-        )
-        .as_str(),
-    );
+    if fd == 1 {
+        utils::log(
+            format!(
+                "write(fd={fd}, buf=&\"{ptr_contents}\", count={count}\n",
+                ptr_contents = if fd == 1 {
+                    String::from_utf8(slice::from_raw_parts::<u8>(buf as *const u8, count).to_vec())
+                        .expect("invalid string passed to fputs")
+                } else {
+                    String::from_utf8_lossy(slice::from_raw_parts::<u8>(buf as *const u8, count)).to_string()
+                },
+            )
+            .as_str(),
+        );
+    } else {
+        utils::log(
+            format!(
+                "fwrite(fd={fd}, buf=&\"{ptr_contents}\", count={count}\n",
+                ptr_contents =
+                    String::from_utf8_lossy(slice::from_raw_parts::<u8>(buf as *const u8, count)),
+            )
+            .as_str(),
+        );
+    }
 
     let real_write: extern "C" fn(c_int, *const c_void, size_t) -> ssize_t =
         mem::transmute(utils::dlsym_next("write"));
