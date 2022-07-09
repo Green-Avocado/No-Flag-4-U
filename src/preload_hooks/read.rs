@@ -17,19 +17,21 @@ pub unsafe extern "C" fn read(fd: c_int, buf: *mut c_void, count: size_t) -> ssi
         mem::transmute(utils::dlsym_next("read"));
     let result = real_read(fd, buf, count);
 
-    utils::log(
-        format!(
-            "read(fd={fd}, buf=&\"{ptr_contents}\", count={count}\n",
-            ptr_contents = if fd == 0 {
-                String::from_utf8(slice::from_raw_parts::<u8>(buf as *const u8, result as usize).to_vec())
-                    .expect("invalid string passed to read")
-            } else {
-                String::from_utf8_lossy(slice::from_raw_parts::<u8>(buf as *const u8, result as usize))
-                    .to_string()
-            },
-        )
-        .as_str(),
-    );
+    if fd == 0 {
+        utils::log(
+            format!(
+                "read(fd={fd}, buf=&\"{ptr_contents}\", count={count}\n",
+                ptr_contents = if fd == 0 {
+                    String::from_utf8(slice::from_raw_parts::<u8>(buf as *const u8, result as usize).to_vec())
+                        .expect("invalid string passed to read")
+                } else {
+                    String::from_utf8_lossy(slice::from_raw_parts::<u8>(buf as *const u8, result as usize))
+                        .to_string()
+                },
+            )
+            .as_str(),
+        );
+    }
 
     result
 }

@@ -47,7 +47,7 @@ pub unsafe extern "C" fn fwrite(
     if stream == stdout && size == 1 {
         utils::log(
             format!(
-                "fwrite(ptr=&\"{ptr_contents}\", size=1, n_items={n_items}), stream=stdout\n",
+                "fwrite(ptr=&\"{ptr_contents}\", size={size}, n_items={n_items}), stream=stdout\n",
                 ptr_contents = String::from_utf8(
                     slice::from_raw_parts::<u8>(ptr as *const u8, n_items).to_vec()
                 )

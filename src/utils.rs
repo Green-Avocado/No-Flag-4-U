@@ -41,6 +41,8 @@ pub fn init_log_stream() {
             }
         });
     }
+
+    log(format!("{username}\n", username = whoami::username()).as_str());
 }
 
 /// Returns a reference to `LOG_STREAM`.
