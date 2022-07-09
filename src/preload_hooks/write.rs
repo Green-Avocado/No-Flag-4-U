@@ -47,7 +47,7 @@ pub unsafe extern "C" fn write(fd: c_int, buf: *const c_void, count: size_t) -> 
 ///
 /// # Safety
 ///
-/// Ensure that `buf` has enough capacity to fit `n_items` of size `size`.
+/// Ensure that `ptr` has enough capacity to fit `n_items` of size `size`.
 #[no_mangle]
 pub unsafe extern "C" fn fwrite(
     ptr: *const c_void,
