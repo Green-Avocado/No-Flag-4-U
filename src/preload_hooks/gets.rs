@@ -6,6 +6,32 @@ extern "C" {
     static stdin: *mut FILE;
 }
 
+/// Hooks `gets`.
+///
+/// Passes call to `gets` in libc.
+///
+/// # Safety
+///
+/// Ensure that a valid string is read and the length is smaller than the size of the buffer.
+#[no_mangle]
+pub unsafe extern "C" fn gets(s: *mut c_char) -> *mut c_char {
+    let real_gets: extern "C" fn(*mut c_char) -> *mut c_char =
+        mem::transmute(utils::dlsym_next("gets"));
+    let result = real_gets(s);
+
+    utils::log(
+        format!(
+            "gets(s=&\"{ptr_contents}\")\n",
+            ptr_contents = CStr::from_ptr(s)
+                .to_str()
+                .expect("invalid string passed to gets"),
+        )
+        .as_str(),
+    );
+
+    result
+}
+
 /// Hooks `fgets`.
 ///
 /// Passes call to `fgets` in libc.
@@ -26,32 +52,6 @@ pub unsafe extern "C" fn fgets(s: *mut c_char, n: c_int, stream: *mut FILE) -> *
                 .to_str()
                 .expect("invalid string passed to fgets"),
             stream_fmt = if stream == stdin { "stdin" } else { "unknown" }
-        )
-        .as_str(),
-    );
-
-    result
-}
-
-/// Hooks `gets`.
-///
-/// Passes call to `gets` in libc.
-///
-/// # Safety
-///
-/// Ensure that a valid string is read and the length is smaller than the size of the buffer.
-#[no_mangle]
-pub unsafe extern "C" fn gets(s: *mut c_char) -> *mut c_char {
-    let real_gets: extern "C" fn(*mut c_char) -> *mut c_char =
-        mem::transmute(utils::dlsym_next("gets"));
-    let result = real_gets(s);
-
-    utils::log(
-        format!(
-            "gets(s=&\"{ptr_contents}\")\n",
-            ptr_contents = CStr::from_ptr(s)
-                .to_str()
-                .expect("invalid string passed to gets"),
         )
         .as_str(),
     );
