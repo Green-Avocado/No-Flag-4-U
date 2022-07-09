@@ -15,6 +15,8 @@ extern "C" {
 /// Ensure that a valid string is read and the length is smaller than the size of the buffer.
 #[no_mangle]
 pub unsafe extern "C" fn gets(s: *mut c_char) -> *mut c_char {
+    let (canary_addr, canary_value) = utils::get_bof_indicator(s as *const usize);
+
     let real_gets: extern "C" fn(*mut c_char) -> *mut c_char =
         mem::transmute(utils::dlsym_next("gets"));
     let result = real_gets(s);
@@ -29,6 +31,10 @@ pub unsafe extern "C" fn gets(s: *mut c_char) -> *mut c_char {
         .as_str(),
     );
 
+    if *canary_addr != canary_value {
+        panic!("buffer overflow");
+    }
+
     result
 }
 
@@ -41,6 +47,8 @@ pub unsafe extern "C" fn gets(s: *mut c_char) -> *mut c_char {
 /// Ensure that a valid string is read and that `n` is smaller than the size of the buffer.
 #[no_mangle]
 pub unsafe extern "C" fn fgets(s: *mut c_char, n: c_int, stream: *mut FILE) -> *mut c_char {
+    let (canary_addr, canary_value) = utils::get_bof_indicator(s as *const usize);
+
     let real_fgets: extern "C" fn(*mut c_char, c_int, *mut FILE) -> *mut c_char =
         mem::transmute(utils::dlsym_next("fgets"));
     let result = real_fgets(s, n, stream);
@@ -55,6 +63,10 @@ pub unsafe extern "C" fn fgets(s: *mut c_char, n: c_int, stream: *mut FILE) -> *
         )
         .as_str(),
     );
+
+    if *canary_addr != canary_value {
+        panic!("buffer overflow");
+    }
 
     result
 }

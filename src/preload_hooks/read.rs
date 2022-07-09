@@ -13,6 +13,8 @@ extern "C" {
 /// Ensure that `buf` has enough capacity to fit `count` bytes.
 #[no_mangle]
 pub unsafe extern "C" fn read(fd: c_int, buf: *mut c_void, count: size_t) -> ssize_t {
+    let (canary_addr, canary_value) = utils::get_bof_indicator(buf as *const usize);
+
     let real_read: extern "C" fn(c_int, *mut c_void, size_t) -> ssize_t =
         mem::transmute(utils::dlsym_next("read"));
     let result = real_read(fd, buf, count);
@@ -38,6 +40,10 @@ pub unsafe extern "C" fn read(fd: c_int, buf: *mut c_void, count: size_t) -> ssi
         );
     }
 
+    if *canary_addr != canary_value {
+        panic!("buffer overflow");
+    }
+
     result
 }
 
@@ -53,6 +59,8 @@ pub unsafe extern "C" fn fread(
     n_items: size_t,
     stream: *mut FILE,
 ) -> size_t {
+    let (canary_addr, canary_value) = utils::get_bof_indicator(ptr as *const usize);
+
     let real_fread: extern "C" fn(*mut c_void, size_t, size_t, *mut FILE) -> size_t =
         mem::transmute(utils::dlsym_next("fread"));
     let result = real_fread(ptr, size, n_items, stream);
@@ -81,6 +89,10 @@ pub unsafe extern "C" fn fread(
         )
             .as_str(),
         );
+    }
+
+    if *canary_addr != canary_value {
+        panic!("buffer overflow");
     }
 
     result

@@ -96,7 +96,7 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
             columns.advance_by(3).expect(PARSE_ERR);
             let file = columns.next().map(str::to_string);
 
-            let sp: usize;
+            let sp: *const c_void;
 
             #[cfg(target_arch = "x86_64")]
             {
@@ -117,7 +117,7 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
                 compile_error!("unsupported target");
             }
 
-            if file == Some(String::from("[stack]")) && sp > ptr as usize {
+            if file == Some(String::from("[stack]")) && sp > ptr {
                 panic!("dangling stack pointer");
             }
 
@@ -133,6 +133,41 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     contents.zeroize();
 
     page_info
+}
+
+pub fn get_bof_indicator(ptr: *const usize) -> (*const usize, usize) {
+    let mut bp: *const usize;
+
+    #[cfg(target_arch = "x86_64")]
+    {
+        unsafe {
+            asm!("mov {}, rbp", out(reg) bp);
+        }
+    }
+
+    #[cfg(target_arch = "x86")]
+    {
+        unsafe {
+            asm!("mov {}, ebp", out(reg) bp);
+        }
+    }
+
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "x86")))]
+    {
+        compile_error!("unsupported target");
+    }
+
+    while bp < ptr {
+        let next_bp = unsafe { *bp };
+
+        if (next_bp as *const usize) > bp && get_ptr_info(next_bp as *const c_void).is_some() {
+            bp = next_bp as *const usize;
+        } else {
+            break;
+        }
+    }
+
+    (bp, unsafe { *bp })
 }
 
 #[cfg(test)]
