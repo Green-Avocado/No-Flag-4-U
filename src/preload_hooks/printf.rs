@@ -299,7 +299,7 @@ pub unsafe extern "C" fn snprintf(
 /// # Safety
 ///
 /// This function should only be called by other hooked `sprintf` functions.
-pub unsafe extern "C" fn vsprintf_internal(
+unsafe extern "C" fn vsprintf_internal(
     s: *mut c_char,
     format: *const c_char,
     ap: VaList,
@@ -318,7 +318,7 @@ pub unsafe extern "C" fn vsprintf_internal(
     }
 }
 
-/// Hooks `vsprintf.
+/// Hooks `vsprintf`.
 ///
 /// passes call to `vsprintf_internal`.
 ///
