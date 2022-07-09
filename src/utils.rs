@@ -50,6 +50,18 @@ fn get_log_stream<'a>() -> Option<&'a Mutex<TcpStream>> {
     unsafe { LOG_STREAM.as_ref() }
 }
 
+/// Logs `info` to the logging process via TCP.
+pub fn log(info: &str) {
+    if let Some(stream) = get_log_stream() {
+        match stream.lock().unwrap().write(info.as_bytes()) {
+            Ok(_) => (),
+            Err(e) => {
+                panic!("{e}");
+            }
+        }
+    }
+}
+
 /// Wraps `dlsym()` to get the next pointer for a symbol.
 pub unsafe fn dlsym_next(symbol: &str) -> *mut c_void {
     dlsym(RTLD_NEXT, CString::new(symbol).unwrap().into_raw())
@@ -121,18 +133,6 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
     contents.zeroize();
 
     page_info
-}
-
-/// Logs `info` to the logging process via TCP.
-pub fn log(info: &str) {
-    if let Some(stream) = get_log_stream() {
-        match stream.lock().unwrap().write(info.as_bytes()) {
-            Ok(_) => (),
-            Err(e) => {
-                panic!("{e}");
-            }
-        }
-    }
 }
 
 #[cfg(test)]
