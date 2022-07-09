@@ -5,14 +5,15 @@ Provides wrappers for some libc functions to mitigate security risks.
 ## Features
 
 - Memory is never freed after `__libc_start_main()` to prevent UAF.
-- Safely wraps non-constant format strings for `printf()`.
+- Safely wraps non-constant format strings.
+- Panics on invalid UTF-8 strings in stdin or stdout.
 - Logs IO to a file using an external process.
 
 ### Wrappers
 
 - read (TODO)
 - write
-- gets (TODO)
+- gets (WIP)
 - puts
 - scanf (TODO)
 - printf
