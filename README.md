@@ -37,7 +37,7 @@ However, in some cases it may be desirable to disable or enable certain mitigati
 Enable or disable optional features by passing flags to rustc:
 
 ```
-cargo rustc --release -- --cfg [OPTION]
+cargo build --features [OPTION]
 ```
 | OPTION                         | Description                                                     |
 |--------------------------------|-----------------------------------------------------------------|

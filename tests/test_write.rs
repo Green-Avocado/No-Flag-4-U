@@ -1,4 +1,4 @@
-#[cfg(not(disable_write_hooks))]
+#[cfg(not(feature = "disable_write_hooks"))]
 mod tests {
     use inline_c::assert_c;
     use std::panic;

@@ -1,4 +1,4 @@
-#[cfg(not(disable_printf_hooks))]
+#[cfg(not(feature = "disable_printf_hooks"))]
 mod tests {
     use inline_c::assert_c;
     use std::panic;
@@ -24,8 +24,8 @@ mod tests {
 
             int main() {
                 printf(
-                    "%d\n%c\n%lx\n%05u\n%s\n%.2f\n",
-                    13, 'c', (unsigned long) -1, 11, "Test", 1.1);
+                    "%d\n%c\n%x\n%05u\n%s\n%.2f\n",
+                    13, 'c', -1, 11, "Test", 1.1);
                 return 0;
             }
         })
@@ -33,7 +33,7 @@ mod tests {
         .stdout(
             "13\n\
             c\n\
-            ffffffffffffffff\n\
+            ffffffff\n\
             00011\n\
             Test\n\
             1.10\n",
@@ -96,7 +96,7 @@ mod tests {
             }
         };
 
-        if cfg!(enable_restrict_n_directive) {
+        if cfg!(feature = "enable_restrict_n_directive") {
             assertion_simple.failure();
             assertion_complex.failure();
         } else {

@@ -1,4 +1,4 @@
-#[cfg(not(disable_heap_hooks))]
+#[cfg(not(feature = "disable_heap_hooks"))]
 mod tests {
     use inline_c::assert_c;
     use libc::c_void;

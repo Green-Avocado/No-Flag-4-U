@@ -24,3 +24,15 @@ path = "src/log_server.rs"
 strip = true
 opt-level = "z"
 lto = true
+
+[features]
+enable_restrict_n_directive	= []
+enable_env_config = []
+enable_restrictive_seccomp = []
+disable_read_hooks = []
+disable_write_hooks = []
+disable_gets_hooks = []
+disable_puts_hooks = []
+disable_scanf_hooks = []
+disable_printf_hooks = []
+disable_heap_hooks = []

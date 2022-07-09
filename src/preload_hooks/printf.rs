@@ -388,7 +388,7 @@ fn check_format_string(format: *const c_char) -> FormatStringResult {
         return FormatStringResult::NonConstant;
     }
 
-    if cfg!(enable_restrict_n_directive) {
+    if cfg!(feature = "enable_restrict_n_directive") {
         let s = unsafe { CStr::from_ptr(format) }
             .to_str()
             .expect("invalid format string");
@@ -445,14 +445,14 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(enable_restrict_n_directive, should_panic)]
+    #[cfg_attr(feature = "enable_restrict_n_directive", should_panic)]
     fn test_check_basic_n_directive() {
         _ = panic::take_hook();
         check_format_string("%n\0".as_ptr() as *const c_char);
     }
 
     #[test]
-    #[cfg_attr(enable_restrict_n_directive, should_panic)]
+    #[cfg_attr(feature = "enable_restrict_n_directive", should_panic)]
     fn test_check_complex_n_directive() {
         _ = panic::take_hook();
         check_format_string("%1$hhn\0".as_ptr() as *const c_char);
