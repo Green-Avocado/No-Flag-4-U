@@ -32,8 +32,6 @@ unsafe extern "C" fn __libc_start_main(
     MAIN_STARTED.store(true, Ordering::SeqCst);
 
     utils::init_log_stream();
-
-    utils::log(format!("{username}\n", username = whoami::username()).as_str());
     utils::log("Main Started\n");
 
     let real_libc_start_main: extern "C" fn(
