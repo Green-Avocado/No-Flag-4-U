@@ -82,12 +82,28 @@ pub fn get_ptr_info(ptr: *const c_void) -> Option<PageInfo> {
             columns.advance_by(3).expect(PARSE_ERR);
             let file = columns.next().map(str::to_string);
 
-            let rsp: usize;
-            unsafe {
-                asm!("mov {}, rsp", out(reg) rsp);
+            let sp: usize;
+
+            #[cfg(target_arch = "x86_64")]
+            {
+                unsafe {
+                    asm!("mov {}, rsp", out(reg) sp);
+                }
+            }
+            
+            #[cfg(target_arch = "x86")]
+            {
+                unsafe {
+                    asm!("mov {}, esp", out(reg) sp);
+                }
             }
 
-            if file == Some(String::from("[stack]")) && rsp > ptr as usize {
+            #[cfg(not(any(target_arch = "x86_64", target_arch = "x86")))]
+            {
+                compile_error!("unsupported target");
+            }
+
+            if file == Some(String::from("[stack]")) && sp > ptr as usize {
                 panic!("dangling stack pointer");
             }
 
@@ -138,11 +154,28 @@ mod tests {
 
     #[test]
     fn test_get_ptr_info_stack() {
-        let rsp: usize;
-        unsafe {
-            asm!("mov {}, rsp", out(reg) rsp);
+        let sp: usize;
+
+        #[cfg(target_arch = "x86_64")]
+        {
+            unsafe {
+                asm!("mov {}, rsp", out(reg) sp);
+            }
         }
-        let page_info = get_ptr_info(rsp as *const c_void).unwrap();
+        
+        #[cfg(target_arch = "x86")]
+        {
+            unsafe {
+                asm!("mov {}, esp", out(reg) sp);
+            }
+        }
+
+        #[cfg(not(any(target_arch = "x86_64", target_arch = "x86")))]
+        {
+            compile_error!("unsupported target");
+        }
+
+        let page_info = get_ptr_info(sp as *const c_void).unwrap();
         assert_eq!(page_info.read, true);
         assert_eq!(page_info.write, true);
         assert_eq!(page_info.execute, false);
