@@ -25,11 +25,7 @@ pub unsafe extern "C" fn fgets(s: *mut c_char, n: c_int, stream: *mut FILE) -> *
             ptr_contents = CStr::from_ptr(s)
                 .to_str()
                 .expect("invalid string passed to fgets"),
-            stream_fmt = if stream == stdin {
-                "stdin"
-            } else {
-                "unknown"
-            }
+            stream_fmt = if stream == stdin { "stdin" } else { "unknown" }
         )
         .as_str(),
     );
