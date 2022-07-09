@@ -27,7 +27,7 @@ Compile with:
 cargo build --release
 ```
 
-Currently supports only `x86_64-unknown-linux-gnu`.
+Currently supports `x86_64-unknown-linux-gnu` and `i686-unknown-linux-gnu`.
 
 ### Options
 
