@@ -1,1 +1,1 @@
-initSidebarItems({});
+initSidebarItems({"fn":[["fread","Hooks `fread`."],["read","Hooks `read`."]]});

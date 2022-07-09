@@ -73,35 +73,6 @@
     <span class="kw">static</span> <span class="ident">stdout</span>: <span class="kw-2">*mut</span> <span class="ident">FILE</span>;
 }
 
-<span class="doccomment">/// Hooks `fputs`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Passes call to `fputs` in libc.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Safety</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Ensure that `s` is a valid C string.</span>
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">fputs</span>(<span class="ident">s</span>: <span class="kw-2">*const</span> <span class="ident">c_char</span>, <span class="ident">stream</span>: <span class="kw-2">*mut</span> <span class="ident">FILE</span>) -&gt; <span class="ident">c_int</span> {
-    <span class="ident">utils::log</span>(
-        <span class="macro">format!</span>(
-            <span class="string">&quot;fputs(s=&amp;\&quot;{ptr_contents}, stream={stream_fmt}\&quot;)\n&quot;</span>,
-            <span class="ident">ptr_contents</span> <span class="op">=</span> <span class="ident">CStr::from_ptr</span>(<span class="ident">s</span>)
-                .<span class="ident">to_str</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;invalid string passed to fputs&quot;</span>),
-            <span class="ident">stream_fmt</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">stream</span> <span class="op">==</span> <span class="ident">stdout</span> {
-                <span class="string">&quot;stdout&quot;</span>
-            } <span class="kw">else</span> {
-                <span class="string">&quot;unknown&quot;</span>
-            }
-        )
-        .<span class="ident">as_str</span>(),
-    );
-
-    <span class="kw">let</span> <span class="ident">real_fputs</span>: <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="kw-2">*const</span> <span class="ident">c_char</span>, <span class="kw-2">*mut</span> <span class="ident">FILE</span>) -&gt; <span class="ident">c_int</span> <span class="op">=</span>
-        <span class="ident">mem::transmute</span>(<span class="ident">utils::dlsym_next</span>(<span class="string">&quot;fputs&quot;</span>));
-    <span class="ident">real_fputs</span>(<span class="ident">s</span>, <span class="ident">stream</span>)
-}
-
 <span class="doccomment">/// Hooks `puts`.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Passes call to `puts` in libc.</span>
@@ -124,6 +95,35 @@
     <span class="kw">let</span> <span class="ident">real_puts</span>: <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="kw-2">*const</span> <span class="ident">c_char</span>) -&gt; <span class="ident">c_int</span> <span class="op">=</span>
         <span class="ident">mem::transmute</span>(<span class="ident">utils::dlsym_next</span>(<span class="string">&quot;puts&quot;</span>));
     <span class="ident">real_puts</span>(<span class="ident">s</span>)
+}
+
+<span class="doccomment">/// Hooks `fputs`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Passes call to `fputs` in libc.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Safety</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Ensure that `s` is a valid C string.</span>
+<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
+<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">fputs</span>(<span class="ident">s</span>: <span class="kw-2">*const</span> <span class="ident">c_char</span>, <span class="ident">stream</span>: <span class="kw-2">*mut</span> <span class="ident">FILE</span>) -&gt; <span class="ident">c_int</span> {
+    <span class="ident">utils::log</span>(
+        <span class="macro">format!</span>(
+            <span class="string">&quot;fputs(s=&amp;\&quot;{ptr_contents}\&quot;, stream={stream_fmt})\n&quot;</span>,
+            <span class="ident">ptr_contents</span> <span class="op">=</span> <span class="ident">CStr::from_ptr</span>(<span class="ident">s</span>)
+                .<span class="ident">to_str</span>()
+                .<span class="ident">expect</span>(<span class="string">&quot;invalid string passed to fputs&quot;</span>),
+            <span class="ident">stream_fmt</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">stream</span> <span class="op">==</span> <span class="ident">stdout</span> {
+                <span class="string">&quot;stdout&quot;</span>
+            } <span class="kw">else</span> {
+                <span class="string">&quot;unknown&quot;</span>
+            }
+        )
+        .<span class="ident">as_str</span>(),
+    );
+
+    <span class="kw">let</span> <span class="ident">real_fputs</span>: <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="kw-2">*const</span> <span class="ident">c_char</span>, <span class="kw-2">*mut</span> <span class="ident">FILE</span>) -&gt; <span class="ident">c_int</span> <span class="op">=</span>
+        <span class="ident">mem::transmute</span>(<span class="ident">utils::dlsym_next</span>(<span class="string">&quot;fputs&quot;</span>));
+    <span class="ident">real_fputs</span>(<span class="ident">s</span>, <span class="ident">stream</span>)
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="no_flag_4_u" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (28b891916 2022-05-29)" ></div>

@@ -855,7 +855,7 @@
         <span class="kw">return</span> <span class="ident">FormatStringResult::NonConstant</span>;
     }
 
-    <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">enable_restrict_n_directive</span>) {
+    <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;enable_restrict_n_directive&quot;</span>) {
         <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">CStr::from_ptr</span>(<span class="ident">format</span>) }
             .<span class="ident">to_str</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;invalid format string&quot;</span>);
@@ -912,14 +912,14 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">enable_restrict_n_directive</span>, <span class="ident">should_panic</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;enable_restrict_n_directive&quot;</span>, <span class="ident">should_panic</span>)]</span>
     <span class="kw">fn</span> <span class="ident">test_check_basic_n_directive</span>() {
         <span class="kw">_</span> <span class="op">=</span> <span class="ident">panic::take_hook</span>();
         <span class="ident">check_format_string</span>(<span class="string">&quot;%n\0&quot;</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">c_char</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">enable_restrict_n_directive</span>, <span class="ident">should_panic</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;enable_restrict_n_directive&quot;</span>, <span class="ident">should_panic</span>)]</span>
     <span class="kw">fn</span> <span class="ident">test_check_complex_n_directive</span>() {
         <span class="kw">_</span> <span class="op">=</span> <span class="ident">panic::take_hook</span>();
         <span class="ident">check_format_string</span>(<span class="string">&quot;%1$hhn\0&quot;</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">c_char</span>);

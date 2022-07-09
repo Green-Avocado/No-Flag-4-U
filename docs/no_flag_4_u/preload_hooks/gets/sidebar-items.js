@@ -1,1 +1,1 @@
-initSidebarItems({});
+initSidebarItems({"fn":[["fgets","Hooks `fgets`."],["gets","Hooks `gets`."]]});
